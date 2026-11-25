@@ -9,6 +9,7 @@ import { createAuthMiddleware } from './middleware/auth.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { globalRateLimit } from './middleware/rateLimit.js';
 import { createCatalogRouter } from './modules/catalog/catalog.route.js';
+import { createChecklistRouter } from './modules/checklist/checklist.route.js';
 import { createDeadlinesRouter } from './modules/deadlines/deadlines.route.js';
 import { createDevicesRouter } from './modules/devices/devices.route.js';
 import { createChangesRouter, createFeedRouter } from './modules/feed/feed.route.js';
@@ -44,7 +45,8 @@ export function createApp(options = {}) {
   app.use('/v1/intake', createIntakeRouter(requireAuth, options.intakeOptions));
   app.use('/v1/watches', createWatchesRouter(requireAuth, { tickOptions: options.tickOptions }));
   app.use('/v1/feed', createFeedRouter(requireAuth));
-  app.use('/v1/changes', createChangesRouter(requireAuth));
+  app.use('/v1/changes', createChangesRouter(requireAuth, options.changesOptions));
+  app.use('/v1/checklist', createChecklistRouter(requireAuth));
   app.use('/v1/deadlines', createDeadlinesRouter(requireAuth));
   app.use('/v1/me', createUsersRouter(requireAuth, { deleteAuthUser: options.deleteAuthUser }));
 

@@ -79,6 +79,10 @@ export const api = {
   getFeed: (cursor) =>
     apiRequest(`/v1/feed${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`),
   getChange: (id) => apiRequest(`/v1/changes/${id}`),
+  translateChange: (id, lang) =>
+    apiRequest(`/v1/changes/${id}/translate`, { method: 'POST', body: { lang } }),
+  patchChecklist: (id, done) =>
+    apiRequest(`/v1/checklist/${id}`, { method: 'PATCH', body: { done } }),
   getDeadlines: (status) =>
     apiRequest(`/v1/deadlines${status ? `?status=${encodeURIComponent(status)}` : ''}`),
   createDeadline: (body) => apiRequest('/v1/deadlines', { method: 'POST', body }),

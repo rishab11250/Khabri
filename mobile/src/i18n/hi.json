@@ -97,7 +97,9 @@
     "unmuteWatch": "अलर्ट चालू करें",
     "mutedDone": "निगरानी म्यूट की गई।",
     "addDeadline": "तिथि सहेजें: {{label}} ({{iso}})",
-    "deadlineSaved": "समय-सीमा खाते में सहेजा गया।"
+    "deadlineSaved": "समय-सीमा खाते में सहेजा गया।",
+    "shareCard": "ख़बर कार्ड शेयर करें",
+    "explainIn": "समझाओ (भाषा)"
   },
   "watching": {
     "title": "निगरानी सूची",

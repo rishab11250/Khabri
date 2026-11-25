@@ -97,7 +97,9 @@
     "unmuteWatch": "એલર્ટ ચાલુ કરો",
     "mutedDone": "દેખરેખ મ્યૂટ થઈ.",
     "addDeadline": "તારીખ સાચવો: {{label}} ({{iso}})",
-    "deadlineSaved": "અંતિમ તારીખ ખાતામાં સાચવાયું."
+    "deadlineSaved": "અંતિમ તારીખ ખાતામાં સાચવાયું.",
+    "shareCard": "ખબર કાર્ડ શેર કરો",
+    "explainIn": "સમજાવો (ભાષા)"
   },
   "watching": {
     "title": "દેખરેખ યાદી",

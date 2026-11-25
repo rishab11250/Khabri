@@ -97,7 +97,9 @@
     "unmuteWatch": "Unmute alerts",
     "mutedDone": "Watch muted.",
     "addDeadline": "Save deadline: {{label}} ({{iso}})",
-    "deadlineSaved": "Deadline saved to ledger."
+    "deadlineSaved": "Deadline saved to ledger.",
+    "shareCard": "Share Khabar Card",
+    "explainIn": "Samjhao (Language)"
   },
   "watching": {
     "title": "Watching",

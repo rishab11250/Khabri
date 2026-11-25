@@ -54,7 +54,7 @@ function getTrustBadge(trust, theme, t) {
   };
 }
 
-export function KhabarCard({ card, onPress, compact = true }) {
+export function KhabarCard({ card, onPress, compact = true, overrideWhy }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const language = useSettingsStore((s) => s.language);
@@ -62,6 +62,7 @@ export function KhabarCard({ card, onPress, compact = true }) {
 
   const impact = getImpactStamp(card.impact, theme, t);
   const trust = getTrustBadge(card.trust, theme, t);
+  const whyText = overrideWhy ?? card.analysis?.why;
   const detectedStr = new Date(card.detectedAt).toLocaleString('en-IN', {
     day: '2-digit',
     month: 'short',
@@ -200,10 +201,10 @@ export function KhabarCard({ card, onPress, compact = true }) {
         </View>
       </View>
 
-      {card.analysis?.why ? (
+      {whyText ? (
         <View style={{ marginBottom: theme.spacing.sm }}>
           <Text style={[typeScale.body, { color: theme.colors.ink, fontFamily: fonts.body }]}>
-            {card.analysis.why}
+            {whyText}
           </Text>
           <Text
             style={[

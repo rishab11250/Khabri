@@ -18,5 +18,7 @@ Response envelope: `{ "success": boolean, "data": T | null, "error": { "code": s
 - `POST /v1/watches/:id/refresh` — Manual direct-source refresh (1-hour cooldown).
 - `GET /v1/feed?cursor&limit` — Cursor-paged Today feed of Khabar Cards.
 - `GET /v1/changes/:id` — Khabar Card detail with user checklist items.
+- `POST /v1/changes/:id/translate` — Translate explanation & checklist (`en`|`hi`|`gu`), cached per change.
+- `PATCH /v1/checklist/:id` — Toggle action checklist item `{ done }`.
 - `GET, POST, PATCH, DELETE /v1/deadlines` — Deadline Ledger CRUD + moved-date history.
 - `GET /demo/board`, `POST /demo/board` — Demo Notice Board HTML/JSON and mutations (`DEMO_MODE=true`).

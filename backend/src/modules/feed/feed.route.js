@@ -1,9 +1,33 @@
 import { Router } from 'express';
 import mongoose from 'mongoose';
 import { z } from 'zod';
+import { buildAiCacheKey, getCachedAi, setCachedAi } from '../../ai/cache.js';
+import { wrapUntrustedData } from '../../ai/prompts.js';
+import { createAiRouter } from '../../ai/router.js';
+import { hasDisallowedUrls } from '../../ai/trust.js';
 import { AppError, ok } from '../../middleware/envelope.js';
 import { validate } from '../../middleware/validate.js';
 import { Change, ChecklistItem, Source, Watch } from '../../models/index.js';
+
+const translateBodySchema = z.object({
+  lang: z.enum(['en', 'hi', 'gu']),
+});
+
+const translateOutputSchema = z.object({
+  why: z.string().trim().min(1).max(800),
+  checklist: z.array(z.string().trim().min(1).max(200)).max(6),
+});
+
+const TRANSLATE_JSON_SCHEMA = {
+  type: 'object',
+  properties: {
+    why: { type: 'string' },
+    checklist: { type: 'array', items: { type: 'string' } },
+  },
+  required: ['why', 'checklist'],
+};
+
+const LANG_NAMES = { hi: 'Hindi (Devanagari script)', gu: 'Gujarati (Gujarati script)' };
 
 const feedQuerySchema = z.object({
   cursor: z.string().optional(),
@@ -105,7 +129,7 @@ export function createFeedRouter(requireAuth) {
   return router;
 }
 
-export function createChangesRouter(requireAuth) {
+export function createChangesRouter(requireAuth, options = {}) {
   const router = Router();
   router.use(requireAuth);
 
@@ -125,6 +149,81 @@ export function createChangesRouter(requireAuth) {
     ]);
 
     return ok(res, { card: formatCard(change, source, checklist) });
+  });
+
+  router.post('/:id/translate', validate({ body: translateBodySchema }), async (req, res, next) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return next(new AppError(400, 'INVALID_ID', 'Invalid change id'));
+    }
+
+    const { lang } = req.body;
+    const change = await Change.findById(req.params.id).lean();
+    if (!change) {
+      return next(new AppError(404, 'CHANGE_NOT_FOUND', 'Change card not found'));
+    }
+
+    if (lang === 'en') {
+      return ok(res, {
+        lang: 'en',
+        why: change.analysis?.why ?? '',
+        checklist: change.analysis?.checklist ?? [],
+        cached: true,
+      });
+    }
+
+    const existing = change.translations?.[lang];
+    if (existing?.why) {
+      return ok(res, {
+        lang,
+        why: existing.why,
+        checklist: existing.checklist ?? [],
+        cached: true,
+      });
+    }
+
+    const payload = {
+      why: change.analysis?.why ?? '',
+      checklist: change.analysis?.checklist ?? [],
+    };
+    const cacheKey = buildAiCacheKey({
+      task: 'translate_change',
+      language: lang,
+      input: payload,
+    });
+
+    let translated = await getCachedAi(cacheKey);
+    let cached = Boolean(translated);
+
+    if (!translated) {
+      const routerAi = options.aiRouter ?? createAiRouter();
+      try {
+        const { result } = await routerAi.generateJson({
+          role: 'user',
+          systemInstruction: `Translate only the provided explanation fields into natural native ${LANG_NAMES[lang]} (not transliteration). Preserve any dates and numbers accurately. Never add URLs. Return JSON only.`,
+          prompt: wrapUntrustedData('EXPLANATION_FIELDS', JSON.stringify(payload)),
+          jsonSchema: TRANSLATE_JSON_SCHEMA,
+        });
+        const parsed = translateOutputSchema.parse(result);
+        if (hasDisallowedUrls(`${parsed.why} ${parsed.checklist.join(' ')}`, [payload.why])) {
+          return next(new AppError(502, 'TRANSLATION_REJECTED', 'Invalid URL in translation'));
+        }
+        translated = parsed;
+        await setCachedAi(cacheKey, translated);
+      } catch (err) {
+        return next(
+          new AppError(502, 'TRANSLATION_FAILED', err?.message || 'Translation unavailable'),
+        );
+      }
+    }
+
+    await Change.updateOne({ _id: change._id }, { $set: { [`translations.${lang}`]: translated } });
+
+    return ok(res, {
+      lang,
+      why: translated.why,
+      checklist: translated.checklist,
+      cached,
+    });
   });
 
   return router;

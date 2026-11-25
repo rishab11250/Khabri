@@ -26,7 +26,21 @@ export default {
       },
       predictiveBackGestureEnabled: false,
     },
-    plugins: ['expo-router', 'expo-font', 'expo-splash-screen', 'expo-localization'],
+    plugins: [
+      'expo-router',
+      'expo-font',
+      'expo-splash-screen',
+      'expo-localization',
+      'expo-secure-store',
+      [
+        'expo-location',
+        {
+          locationWhenInUsePermission:
+            'Khabri uses coarse location once during setup to pre-select your state.',
+        },
+      ],
+      'expo-notifications',
+    ],
     experiments: {
       typedRoutes: false,
     },

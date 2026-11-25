@@ -4,6 +4,64 @@
     "tagline": "Subah ka akhbaar — official notices, no rumours.",
     "unofficialDisclaimer": "Khabri is an independent, unofficial tool. Always verify on the linked official portal."
   },
+  "common": {
+    "loading": "Loading...",
+    "continue": "Continue",
+    "back": "Back",
+    "skip": "Skip for now",
+    "save": "Save",
+    "retry": "Retry",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "setupMissingTitle": "Environment setup needed",
+    "setupMissingBody": "Add EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, and EXPO_PUBLIC_API_URL to mobile/.env."
+  },
+  "auth": {
+    "signInTitle": "Sign in to Khabri",
+    "signUpTitle": "Create your Khabri account",
+    "subtitle": "Your personal official-notice daily.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "aarav@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "At least 6 characters",
+    "nameLabel": "Your name",
+    "namePlaceholder": "Aarav",
+    "signInButton": "Sign in",
+    "signUpButton": "Create account",
+    "switchToSignUp": "New here? Create an account",
+    "switchToSignIn": "Already have an account? Sign in",
+    "confirmEmailNotice": "Account created. Check your email to confirm, then sign in.",
+    "invalidEmail": "Enter a valid email address.",
+    "passwordMin": "Password must be at least 6 characters.",
+    "nameRequired": "Enter your name.",
+    "signOut": "Sign out"
+  },
+  "onboarding": {
+    "stepIndicator": "Step {{step}} of 4",
+    "languageTitle": "Choose your language",
+    "languageSubtitle": "You can switch anytime in Me. Official source text always stays untouched.",
+    "stateTitle": "Select your state",
+    "stateSubtitle": "Helps surface regional exam boards, scholarships, and state notices.",
+    "detectLocation": "Pre-select via location",
+    "detectingLocation": "Checking coarse location...",
+    "locationSuccess": "Pre-selected {{state}}.",
+    "locationUnavailable": "Could not detect state. Pick manually below.",
+    "allIndia": "All India",
+    "interestsTitle": "What are you tracking?",
+    "interestsSubtitle": "Pick one or more notice categories.",
+    "interestMinError": "Pick at least one category.",
+    "categories": {
+      "exam": "Entrance & Board Exams",
+      "recruitment": "Government Recruitment",
+      "scholarship": "Scholarships & Fellowships",
+      "scheme": "Welfare Schemes",
+      "university": "University Notices"
+    },
+    "permissionsTitle": "Stay tapped on time",
+    "permissionsSubtitle": "Allow notifications so high-impact notice changes and deadline alerts reach you.",
+    "enableNotifications": "Allow notifications & finish",
+    "skipNotifications": "Finish without notifications",
+    "savingProfile": "Saving preferences..."
+  },
   "tabs": {
     "today": "Today",
     "watching": "Watching",
@@ -32,10 +90,18 @@
   },
   "me": {
     "title": "Me",
+    "account": "Account",
+    "signedInAs": "Signed in as {{email}}",
+    "stateLabel": "State: {{state}}",
     "language": "Language",
     "theme": "Edition Theme",
     "themeLight": "Subah ka akhbaar (Light)",
     "themeDark": "Raat ka akhbaar (Dark)",
-    "themeSystem": "Follow device"
+    "themeSystem": "Follow device",
+    "backendStatus": "API connection",
+    "backendChecking": "Checking...",
+    "backendOnline": "Connected ({{db}})",
+    "backendOffline": "Unreachable",
+    "checkBackend": "Check API"
   }
 }

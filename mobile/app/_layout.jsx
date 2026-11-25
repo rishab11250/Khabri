@@ -1,38 +1,112 @@
 import { useEffect } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { AppState } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../src/i18n';
+import { api } from '../src/lib/api';
+import { isApiConfigured } from '../src/lib/env';
+import { supabase } from '../src/lib/supabase';
+import { useSessionStore } from '../src/store/session';
+import { useSettingsStore } from '../src/store/settings';
 import { fontAssets } from '../src/theme/typography';
 import { useTheme } from '../src/theme/useTheme';
 
 SplashScreen.preventAutoHideAsync();
 
+const queryClient = new QueryClient();
+
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(fontAssets);
   const theme = useTheme();
+  const hydrated = useSessionStore((s) => s.hydrated);
+  const setHydrated = useSessionStore((s) => s.setHydrated);
+  const setSession = useSessionStore((s) => s.setSession);
+  const setProfile = useSessionStore((s) => s.setProfile);
+  const setLanguage = useSettingsStore((s) => s.setLanguage);
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    let mounted = true;
+
+    async function bootstrapSession() {
+      if (!supabase) {
+        if (mounted) setHydrated(true);
+        return;
+      }
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!mounted) return;
+        const currentSession = data?.session ?? null;
+        setSession(currentSession);
+        if (currentSession && isApiConfigured) {
+          try {
+            const me = await api.getMe();
+            if (!mounted) return;
+            setProfile(me.user);
+            if (me.user?.language) {
+              setLanguage(me.user.language);
+            }
+          } catch {
+            if (mounted) setProfile(null);
+          }
+        }
+      } finally {
+        if (mounted) setHydrated(true);
+      }
+    }
+
+    bootstrapSession();
+
+    const authSub = supabase
+      ? supabase.auth.onAuthStateChange((_event, nextSession) => {
+          setSession(nextSession);
+          if (!nextSession) {
+            setProfile(null);
+          }
+        })
+      : null;
+
+    const appStateSub = supabase
+      ? AppState.addEventListener('change', (state) => {
+          if (state === 'active') {
+            supabase.auth.startAutoRefresh();
+          } else {
+            supabase.auth.stopAutoRefresh();
+          }
+        })
+      : null;
+
+    return () => {
+      mounted = false;
+      authSub?.data?.subscription?.unsubscribe();
+      appStateSub?.remove();
+    };
+  }, [setHydrated, setLanguage, setProfile, setSession]);
+
+  useEffect(() => {
+    if ((fontsLoaded || fontError) && hydrated) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError, hydrated]);
 
-  if (!fontsLoaded && !fontError) {
+  if ((!fontsLoaded && !fontError) || !hydrated) {
     return null;
   }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: theme.colors.background },
-        }}
-      />
-    </SafeAreaProvider>
+    <QueryClientProvider client={queryClient}>
+      <SafeAreaProvider>
+        <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: theme.colors.background },
+          }}
+        />
+      </SafeAreaProvider>
+    </QueryClientProvider>
   );
 }

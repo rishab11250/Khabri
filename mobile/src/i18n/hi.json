@@ -4,6 +4,64 @@
     "tagline": "सुबह का अख़बार — आधिकारिक सूचनाएँ, बिना अफ़वाह।",
     "unofficialDisclaimer": "ख़बरी एक स्वतंत्र, अनौपचारिक ऐप है। हमेशा दिए गए आधिकारिक लिंक पर जाँच करें।"
   },
+  "common": {
+    "loading": "लोड हो रहा है...",
+    "continue": "आगे बढ़ें",
+    "back": "पीछे",
+    "skip": "अभी छोड़ें",
+    "save": "सहेजें",
+    "retry": "पुनः प्रयास करें",
+    "errorGeneric": "कुछ गड़बड़ हुई। कृपया पुनः प्रयास करें।",
+    "setupMissingTitle": "एनवायरनमेंट सेटअप आवश्यक",
+    "setupMissingBody": "mobile/.env में EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY और EXPO_PUBLIC_API_URL जोड़ें।"
+  },
+  "auth": {
+    "signInTitle": "ख़बरी में साइन इन करें",
+    "signUpTitle": "अपना ख़बरी खाता बनाएँ",
+    "subtitle": "आधिकारिक सूचनाओं का आपका दैनिक अख़बार।",
+    "emailLabel": "ईमेल",
+    "emailPlaceholder": "aarav@example.com",
+    "passwordLabel": "पासवर्ड",
+    "passwordPlaceholder": "कम से कम 6 अक्षर",
+    "nameLabel": "आपका नाम",
+    "namePlaceholder": "आरव",
+    "signInButton": "साइन इन करें",
+    "signUpButton": "खाता बनाएँ",
+    "switchToSignUp": "नए उपयोगकर्ता? नया खाता बनाएँ",
+    "switchToSignIn": "पहले से खाता है? साइन इन करें",
+    "confirmEmailNotice": "खाता बन गया। ईमेल की पुष्टि करें और फिर साइन इन करें।",
+    "invalidEmail": "मान्य ईमेल पता दर्ज करें।",
+    "passwordMin": "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।",
+    "nameRequired": "अपना नाम दर्ज करें।",
+    "signOut": "साइन आउट"
+  },
+  "onboarding": {
+    "stepIndicator": "चरण {{step}} / 4",
+    "languageTitle": "अपनी भाषा चुनें",
+    "languageSubtitle": "आप 'मैं' टैब से कभी भी बदल सकते हैं। मूल आधिकारिक पाठ कभी नहीं बदला जाता।",
+    "stateTitle": "अपना राज्य चुनें",
+    "stateSubtitle": "क्षेत्रीय परीक्षा बोर्ड, छात्रवृत्ति और राज्य सूचनाएँ दिखाने में मदद करता है।",
+    "detectLocation": "लोकेशन से राज्य चुनें",
+    "detectingLocation": "लोकेशन जाँची जा रही है...",
+    "locationSuccess": "{{state}} चुना गया।",
+    "locationUnavailable": "राज्य पता नहीं चला। नीचे से स्वयं चुनें।",
+    "allIndia": "संपूर्ण भारत",
+    "interestsTitle": "आप क्या ट्रैक करना चाहते हैं?",
+    "interestsSubtitle": "एक या अधिक श्रेणियाँ चुनें।",
+    "interestMinError": "कम से कम एक श्रेणी चुनें।",
+    "categories": {
+      "exam": "प्रवेश और बोर्ड परीक्षाएँ",
+      "recruitment": "सरकारी भर्तियाँ",
+      "scholarship": "छात्रवृत्ति और फ़ेलोशिप",
+      "scheme": "सरकारी योजनाएँ",
+      "university": "विश्वविद्यालय सूचनाएँ"
+    },
+    "permissionsTitle": "समय पर सूचना पाएँ",
+    "permissionsSubtitle": "महत्वपूर्ण बदलाव और अंतिम तिथि अलर्ट के लिए नोटिफ़िकेशन अनुमति दें।",
+    "enableNotifications": "नोटिफ़िकेशन चालू करें और पूरा करें",
+    "skipNotifications": "बिना नोटिफ़िकेशन के आगे बढ़ें",
+    "savingProfile": "प्राथमिकताएँ सहेजी जा रही हैं..."
+  },
   "tabs": {
     "today": "आज",
     "watching": "निगरानी",
@@ -32,10 +90,18 @@
   },
   "me": {
     "title": "मेरी प्रोफ़ाइल",
+    "account": "खाता",
+    "signedInAs": "{{email}} के रूप में साइन इन",
+    "stateLabel": "राज्य: {{state}}",
     "language": "भाषा",
     "theme": "अख़बार थीम",
     "themeLight": "सुबह का अख़बार (लाइट)",
     "themeDark": "रात का अख़बार (डार्क)",
-    "themeSystem": "डिवाइस के अनुसार"
+    "themeSystem": "डिवाइस के अनुसार",
+    "backendStatus": "API कनेक्शन",
+    "backendChecking": "जाँच हो रही है...",
+    "backendOnline": "कनेक्टेड ({{db}})",
+    "backendOffline": "उपलब्ध नहीं",
+    "checkBackend": "API जाँचें"
   }
 }

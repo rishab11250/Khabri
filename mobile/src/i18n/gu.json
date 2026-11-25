@@ -4,6 +4,64 @@
     "tagline": "સવારનું અખબાર — સત્તાવાર સૂચનાઓ, અફવા વગર.",
     "unofficialDisclaimer": "ખબરી એક સ્વતંત્ર, બિનસત્તાવાર એપ છે. હંમેશા આપેલ સત્તાવાર લિંક પર ચકાસો."
   },
+  "common": {
+    "loading": "લોડ થઈ રહ્યું છે...",
+    "continue": "આગળ વધો",
+    "back": "પાછળ",
+    "skip": "અત્યારે છોડો",
+    "save": "સાચવો",
+    "retry": "ફરી પ્રયાસ કરો",
+    "errorGeneric": "કંઈક ખોટું થયું. ફરી પ્રયાસ કરો.",
+    "setupMissingTitle": "એન્વાયર્નમેન્ટ સેટઅપ જરૂરી",
+    "setupMissingBody": "mobile/.env માં EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY અને EXPO_PUBLIC_API_URL ઉમેરો."
+  },
+  "auth": {
+    "signInTitle": "ખબરીમાં સાઇન ઇન કરો",
+    "signUpTitle": "તમારું ખબરી ખાતું બનાવો",
+    "subtitle": "સત્તાવાર સૂચનાઓનું તમારું દૈનિક અખબાર.",
+    "emailLabel": "ઈમેલ",
+    "emailPlaceholder": "aarav@example.com",
+    "passwordLabel": "પાસવર્ડ",
+    "passwordPlaceholder": "ઓછામાં ઓછા 6 અક્ષરો",
+    "nameLabel": "તમારું નામ",
+    "namePlaceholder": "આરવ",
+    "signInButton": "સાઇન ઇન કરો",
+    "signUpButton": "ખાતું બનાવો",
+    "switchToSignUp": "નવા છો? નવું ખાતું બનાવો",
+    "switchToSignIn": "પહેલેથી ખાતું છે? સાઇન ઇન કરો",
+    "confirmEmailNotice": "ખાતું બની ગયું. ઈમેલ ચકાસો અને પછી સાઇન ઇન કરો.",
+    "invalidEmail": "માન્ય ઈમેલ સરનામું દાખલ કરો.",
+    "passwordMin": "પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરોનો હોવો જોઈએ.",
+    "nameRequired": "તમારું નામ દાખલ કરો.",
+    "signOut": "સાઇન આઉટ"
+  },
+  "onboarding": {
+    "stepIndicator": "પગલું {{step}} / 4",
+    "languageTitle": "તમારી ભાષા પસંદ કરો",
+    "languageSubtitle": "તમે 'હું' ટૅબમાંથી ગમે ત્યારે બદલી શકો છો. મૂળ સત્તાવાર લખાણ ક્યારેય બદલાતું નથી.",
+    "stateTitle": "તમારું રાજ્ય પસંદ કરો",
+    "stateSubtitle": "પ્રાદેશિક પરીક્ષા બોર્ડ, શિષ્યવૃત્તિ અને રાજ્યની સૂચનાઓ બતાવવામાં મદદ કરે છે.",
+    "detectLocation": "લોકેશનથી રાજ્ય પસંદ કરો",
+    "detectingLocation": "લોકેશન ચકાસાઈ રહ્યું છે...",
+    "locationSuccess": "{{state}} પસંદ થયું.",
+    "locationUnavailable": "રાજ્ય મળ્યું નહીં. નીચેથી જાતે પસંદ કરો.",
+    "allIndia": "સમગ્ર ભારત",
+    "interestsTitle": "તમે શું ટ્રૅક કરવા માંગો છો?",
+    "interestsSubtitle": "એક અથવા વધુ શ્રેણીઓ પસંદ કરો.",
+    "interestMinError": "ઓછામાં ઓછી એક શ્રેણી પસંદ કરો.",
+    "categories": {
+      "exam": "પ્રવેશ અને બોર્ડ પરીક્ષાઓ",
+      "recruitment": "સરકારી ભરતી",
+      "scholarship": "શિષ્યવૃત્તિ અને ફેલોશિપ",
+      "scheme": "સરકારી યોજનાઓ",
+      "university": "યુનિવર્સિટી સૂચનાઓ"
+    },
+    "permissionsTitle": "સમયસર માહિતી મેળવો",
+    "permissionsSubtitle": "મહત્વપૂર્ણ ફેરફારો અને અંતિમ તારીખના એલર્ટ માટે નોટિફિકેશનની મંજૂરી આપો.",
+    "enableNotifications": "નોટિફિકેશન ચાલુ કરો અને પૂર્ણ કરો",
+    "skipNotifications": "નોટિફિકેશન વગર પૂર્ણ કરો",
+    "savingProfile": "પસંદગીઓ સાચવાઈ રહી છે..."
+  },
   "tabs": {
     "today": "આજ",
     "watching": "દેખરેખ",
@@ -32,10 +90,18 @@
   },
   "me": {
     "title": "મારી પ્રોફાઇલ",
+    "account": "ખાતું",
+    "signedInAs": "{{email}} તરીકે સાઇન ઇન",
+    "stateLabel": "રાજ્ય: {{state}}",
     "language": "ભાષા",
     "theme": "અખબાર થીમ",
     "themeLight": "સવારનું અખબાર (લાઇટ)",
     "themeDark": "રાતનું અખબાર (ડાર્ક)",
-    "themeSystem": "ડિવાઇસ મુજબ"
+    "themeSystem": "ડિવાઇસ મુજબ",
+    "backendStatus": "API કનેક્શન",
+    "backendChecking": "ચકાસાઈ રહ્યું છે...",
+    "backendOnline": "કનેક્ટેડ ({{db}})",
+    "backendOffline": "ઉપલબ્ધ નથી",
+    "checkBackend": "API ચકાસો"
   }
 }

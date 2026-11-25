@@ -158,6 +158,6 @@ describe('Auth, /v1/me, and /internal/tick', () => {
       .post('/internal/tick')
       .set('x-tick-secret', TEST_ENV.INTERNAL_TICK_SECRET);
     expect(okRes.status).toBe(200);
-    expect(okRes.body.data.status).toBe('stub');
+    expect(okRes.body.data.status).toBe('ok');
   });
 });

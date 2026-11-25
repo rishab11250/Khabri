@@ -29,7 +29,10 @@ export function createApp(options = {}) {
   app.use(express.json({ limit: '1mb' }));
 
   app.use('/health', createHealthRouter());
-  app.use('/internal', createInternalRouter({ tickSecret: options.tickSecret }));
+  app.use(
+    '/internal',
+    createInternalRouter({ tickSecret: options.tickSecret, tickOptions: options.tickOptions }),
+  );
   app.use('/demo', createDemoRouter({ demoMode: options.demoMode }));
   app.use('/v1/catalog', createCatalogRouter());
   app.use('/v1/me', createUsersRouter(requireAuth, { deleteAuthUser: options.deleteAuthUser }));

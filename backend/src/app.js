@@ -1,21 +1,37 @@
+import cors from 'cors';
 import express from 'express';
+import helmet from 'helmet';
+import { pinoHttp } from 'pino-http';
+import { logger } from './config/logger.js';
+import { createInternalRouter } from './jobs/tick.route.js';
+import { createAuthMiddleware } from './middleware/auth.js';
+import { errorHandler, notFoundHandler } from './middleware/errors.js';
+import { globalRateLimit } from './middleware/rateLimit.js';
+import { createHealthRouter } from './modules/health/health.route.js';
+import { createUsersRouter } from './modules/users/users.route.js';
 
-export function createApp() {
+export function createApp(options = {}) {
   const app = express();
+  const requireAuth = createAuthMiddleware({ verifyJwt: options.verifyJwt });
 
-  app.use(express.json());
+  app.set('trust proxy', 1);
+  app.use(helmet());
+  app.use(
+    cors({
+      origin: options.corsOrigin ?? process.env.CORS_ORIGIN ?? true,
+      credentials: false,
+    }),
+  );
+  app.use(pinoHttp({ logger }));
+  app.use(globalRateLimit);
+  app.use(express.json({ limit: '1mb' }));
 
-  app.get('/health', (_req, res) => {
-    res.status(200).json({
-      success: true,
-      data: {
-        status: 'ok',
-        service: 'khabri-api',
-        timestamp: new Date().toISOString(),
-      },
-      error: null,
-    });
-  });
+  app.use('/health', createHealthRouter());
+  app.use('/internal', createInternalRouter({ tickSecret: options.tickSecret }));
+  app.use('/v1/me', createUsersRouter(requireAuth, { deleteAuthUser: options.deleteAuthUser }));
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
   return app;
 }

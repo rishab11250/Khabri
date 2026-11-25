@@ -1,0 +1,24 @@
+name: Scheduled Tick
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger internal tick
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          INTERNAL_TICK_SECRET: ${{ secrets.INTERNAL_TICK_SECRET }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$INTERNAL_TICK_SECRET" ]; then
+            echo "API_URL or INTERNAL_TICK_SECRET not configured; skipping tick."
+            exit 0
+          fi
+          curl --fail-with-body -sS -X POST \
+            -H "x-tick-secret: $INTERNAL_TICK_SECRET" \
+            -H "Content-Type: application/json" \
+            "$API_URL/internal/tick"

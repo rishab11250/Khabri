@@ -79,4 +79,40 @@ export const api = {
   getFeed: (cursor) =>
     apiRequest(`/v1/feed${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`),
   getChange: (id) => apiRequest(`/v1/changes/${id}`),
+  getDeadlines: (status) =>
+    apiRequest(`/v1/deadlines${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+  createDeadline: (body) => apiRequest('/v1/deadlines', { method: 'POST', body }),
+  patchDeadline: (id, body) => apiRequest(`/v1/deadlines/${id}`, { method: 'PATCH', body }),
+  deleteDeadline: (id) => apiRequest(`/v1/deadlines/${id}`, { method: 'DELETE' }),
+  intakeLink: (body) => apiRequest('/v1/intake/link', { method: 'POST', body }),
+  intakePhoto: async (asset) => {
+    if (!isApiConfigured) {
+      throw new ApiError('API_NOT_CONFIGURED', 'EXPO_PUBLIC_API_URL is not configured', 0);
+    }
+    const token = await getAccessToken();
+    const form = new FormData();
+    form.append('photo', {
+      uri: asset.uri,
+      name: asset.fileName || 'notice.jpg',
+      type: asset.mimeType || 'image/jpeg',
+    });
+    const res = await fetch(`${mobileEnv.apiUrl}/v1/intake/photo`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: form,
+    });
+    const payload = await res.json();
+    if (!res.ok || !payload?.success) {
+      const err = payload?.error;
+      throw new ApiError(
+        err?.code ?? 'HTTP_ERROR',
+        err?.message ?? `Request failed (${res.status})`,
+        res.status,
+      );
+    }
+    return payload.data;
+  },
 };

@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import * as Clipboard from 'expo-clipboard';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import {
   FlatList,
@@ -20,13 +22,26 @@ import { useTheme } from '../../src/theme/useTheme';
 
 export default function DiscoverScreen() {
   const { t, i18n } = useTranslation();
+  const router = useRouter();
   const theme = useTheme();
   const fonts = getFontFamilies(i18n.language);
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
+  const [clipboardUrl, setClipboardUrl] = useState('');
   const debouncedQuery = useDebounce(search.trim(), 250);
+
+  useEffect(() => {
+    Clipboard.getStringAsync()
+      .then((text) => {
+        const trimmed = (text || '').trim();
+        if (/^https?:\/\/\S+$/i.test(trimmed)) {
+          setClipboardUrl(trimmed);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const catalogQuery = useQuery({
     queryKey: ['catalog', category, debouncedQuery],
@@ -70,6 +85,58 @@ export default function DiscoverScreen() {
           {t('discover.subtitle')}
         </Text>
       </View>
+
+      <View style={{ flexDirection: 'row', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}>
+        <View style={{ flex: 1 }}>
+          <NewspaperButton
+            variant="secondary"
+            label={t('add.pasteLink')}
+            onPress={() => router.push('/add/link')}
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <NewspaperButton label={t('add.scanPhoto')} onPress={() => router.push('/add/photo')} />
+        </View>
+      </View>
+
+      {clipboardUrl ? (
+        <View
+          style={{
+            backgroundColor: theme.colors.haldi,
+            borderColor: theme.colors.rule,
+            borderWidth: theme.borders.hairline,
+            padding: theme.spacing.md,
+            marginBottom: theme.spacing.md,
+            gap: theme.spacing.xs,
+          }}
+        >
+          <Text
+            style={[
+              typeScale.caption,
+              { color: theme.colors.haldiInk, fontFamily: fonts.bodyBold },
+            ]}
+          >
+            {t('add.clipboardTitle')}
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={[typeScale.caption, { color: theme.colors.haldiInk, fontFamily: fonts.body }]}
+          >
+            {clipboardUrl}
+          </Text>
+          <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+            <NewspaperButton
+              label={t('add.watchLink')}
+              onPress={() => router.push({ pathname: '/add/link', params: { url: clipboardUrl } })}
+            />
+            <NewspaperButton
+              variant="secondary"
+              label={t('common.skip')}
+              onPress={() => setClipboardUrl('')}
+            />
+          </View>
+        </View>
+      ) : null}
 
       <TextInput
         value={search}

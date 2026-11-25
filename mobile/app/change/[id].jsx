@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -33,10 +34,26 @@ export default function ChangeDetailScreen() {
   const card = changeQuery.data?.card;
   const matchingWatch = watchesQuery.data?.watches?.find((w) => w.sourceId === card?.sourceId);
 
+  const [savedDeadlineMsg, setSavedDeadlineMsg] = useState('');
+
   const muteMutation = useMutation({
     mutationFn: () => api.patchWatch(matchingWatch.id, { muted: !matchingWatch.muted }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['watches'] });
+    },
+  });
+
+  const deadlineMutation = useMutation({
+    mutationFn: (d) =>
+      api.createDeadline({
+        label: d.label,
+        dueAt: `${d.iso}T23:59:00.000Z`,
+        sourceId: card.sourceId,
+        changeId: card.id,
+      }),
+    onSuccess: () => {
+      setSavedDeadlineMsg(t('card.deadlineSaved'));
+      queryClient.invalidateQueries({ queryKey: ['deadlines'] });
     },
   });
 
@@ -104,6 +121,30 @@ export default function ChangeDetailScreen() {
                   • {step}
                 </Text>
               ))}
+            </View>
+          ) : null}
+
+          {card.analysis?.dates?.length > 0 ? (
+            <View style={{ gap: theme.spacing.xs, marginBottom: theme.spacing.md }}>
+              {card.analysis.dates.map((d, idx) => (
+                <NewspaperButton
+                  key={idx}
+                  variant="secondary"
+                  disabled={deadlineMutation.isPending}
+                  label={t('card.addDeadline', { label: d.label, iso: d.iso })}
+                  onPress={() => deadlineMutation.mutate(d)}
+                />
+              ))}
+              {savedDeadlineMsg ? (
+                <Text
+                  style={[
+                    typeScale.caption,
+                    { color: theme.colors.neem, fontFamily: fonts.bodyMedium },
+                  ]}
+                >
+                  {savedDeadlineMsg}
+                </Text>
+              ) : null}
             </View>
           ) : null}
 

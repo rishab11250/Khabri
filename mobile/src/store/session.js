@@ -4,6 +4,7 @@ export const useSessionStore = create((set) => ({
   hydrated: false,
   session: null,
   profile: null,
+  photoResult: null,
   onboardingDraft: {
     language: 'en',
     state: 'All India',
@@ -12,6 +13,7 @@ export const useSessionStore = create((set) => ({
   setHydrated: (hydrated) => set({ hydrated }),
   setSession: (session) => set({ session }),
   setProfile: (profile) => set({ profile }),
+  setPhotoResult: (photoResult) => set({ photoResult }),
   updateOnboardingDraft: (patch) =>
     set((prev) => ({
       onboardingDraft: { ...prev.onboardingDraft, ...patch },

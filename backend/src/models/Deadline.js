@@ -7,6 +7,8 @@ const deadlineSchema = new mongoose.Schema(
     sourceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Source' },
     label: { type: String, required: true, trim: true },
     dueAt: { type: Date, required: true },
+    previousDueAt: { type: Date },
+    movedAt: { type: Date },
     status: { type: String, enum: ['active', 'done', 'expired'], default: 'active' },
     calendarEventId: { type: String },
   },

@@ -21,6 +21,16 @@ export async function persistFollowersDataForChange({ change, source }) {
       const dueAt = new Date(`${d.iso}T23:59:00.000Z`);
       if (Number.isNaN(dueAt.getTime())) continue;
 
+      const existing = await Deadline.findOne({
+        userId,
+        sourceId: source._id,
+        label: d.label,
+        status: 'active',
+      }).lean();
+
+      const moved =
+        existing && existing.dueAt && new Date(existing.dueAt).getTime() !== dueAt.getTime();
+
       await Deadline.findOneAndUpdate(
         {
           userId,
@@ -32,6 +42,7 @@ export async function persistFollowersDataForChange({ change, source }) {
           $set: {
             dueAt,
             changeId: change._id,
+            ...(moved ? { previousDueAt: existing.dueAt, movedAt: new Date() } : {}),
           },
         },
         { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },

@@ -25,6 +25,13 @@ export default {
         monochromeImage: './assets/android-icon-monochrome.png',
       },
       predictiveBackGestureEnabled: false,
+      intentFilters: [
+        {
+          action: 'SEND',
+          data: [{ mimeType: 'text/plain' }],
+          category: ['DEFAULT'],
+        },
+      ],
     },
     plugins: [
       'expo-router',
@@ -37,6 +44,25 @@ export default {
         {
           locationWhenInUsePermission:
             'Khabri uses coarse location once during setup to pre-select your state.',
+        },
+      ],
+      [
+        'expo-camera',
+        {
+          cameraPermission:
+            'Khabri uses the camera to scan printed notices and newspaper clippings.',
+        },
+      ],
+      [
+        'expo-image-picker',
+        {
+          photosPermission: 'Khabri lets you choose a notice photo from your library.',
+        },
+      ],
+      [
+        'expo-calendar',
+        {
+          calendarPermission: 'Khabri can add exam and application deadlines to your calendar.',
         },
       ],
       'expo-notifications',

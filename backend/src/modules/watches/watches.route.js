@@ -7,21 +7,30 @@ import { validate } from '../../middleware/validate.js';
 import { Source, Watch } from '../../models/index.js';
 
 const MAX_WATCHES_PER_USER = 15;
+const MAX_SEARCH_WATCHES_PER_USER = 3;
 const REFRESH_COOLDOWN_MS = 60 * 60 * 1000;
 
 const objectIdString = z
   .string()
   .refine((v) => mongoose.Types.ObjectId.isValid(v), 'Invalid ObjectId');
 
-const createWatchSchema = z.object({
-  sourceId: objectIdString,
-  title: z.string().trim().min(1).max(120).optional(),
-  priority: z.enum(['normal', 'instant']).default('normal'),
-  createdVia: z
-    .enum(['catalog', 'link', 'photo', 'trending', 'circle', 'search'])
-    .default('catalog'),
-  focusTerms: z.array(z.string().trim().min(1).max(40)).max(10).optional(),
-});
+const createWatchSchema = z
+  .object({
+    sourceId: objectIdString.optional(),
+    searchQuery: z.string().trim().min(3).max(160).optional(),
+    title: z.string().trim().min(1).max(120).optional(),
+    category: z
+      .enum(['exam', 'recruitment', 'scholarship', 'scheme', 'university'])
+      .default('exam'),
+    priority: z.enum(['normal', 'instant']).default('normal'),
+    createdVia: z
+      .enum(['catalog', 'link', 'photo', 'trending', 'circle', 'search'])
+      .default('catalog'),
+    focusTerms: z.array(z.string().trim().min(1).max(40)).max(10).optional(),
+  })
+  .refine((v) => Boolean(v.sourceId || v.searchQuery), {
+    message: 'Either sourceId or searchQuery is required',
+  });
 
 const patchWatchSchema = z
   .object({
@@ -78,7 +87,7 @@ export function createWatchesRouter(requireAuth, options = {}) {
   });
 
   router.post('/', validate({ body: createWatchSchema }), async (req, res, next) => {
-    const { sourceId, title, priority, createdVia, focusTerms } = req.body;
+    const { sourceId, searchQuery, title, category, priority, createdVia, focusTerms } = req.body;
 
     const currentCount = await Watch.countDocuments({ userId: req.user._id });
     if (currentCount >= MAX_WATCHES_PER_USER) {
@@ -91,9 +100,42 @@ export function createWatchesRouter(requireAuth, options = {}) {
       );
     }
 
-    const source = await Source.findById(sourceId);
-    if (!source) {
-      return next(new AppError(404, 'SOURCE_NOT_FOUND', 'Source not found'));
+    let source;
+    if (sourceId) {
+      source = await Source.findById(sourceId);
+      if (!source) {
+        return next(new AppError(404, 'SOURCE_NOT_FOUND', 'Source not found'));
+      }
+    } else {
+      const searchCount = await Watch.countDocuments({
+        userId: req.user._id,
+        createdVia: 'search',
+      });
+      if (searchCount >= MAX_SEARCH_WATCHES_PER_USER) {
+        return next(
+          new AppError(
+            400,
+            'SEARCH_WATCH_LIMIT_REACHED',
+            `Maximum ${MAX_SEARCH_WATCHES_PER_USER} search watches allowed per user`,
+          ),
+        );
+      }
+      const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
+      source = await Source.findOneAndUpdate(
+        { url: searchUrl },
+        {
+          $setOnInsert: {
+            name: title || searchQuery,
+            url: searchUrl,
+            type: 'search',
+            category,
+            trust: 'reported',
+            intervalMin: 1440,
+            nextDueAt: new Date(),
+          },
+        },
+        { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
+      );
     }
 
     const existing = await Watch.findOne({ userId: req.user._id, sourceId: source._id }).lean();
@@ -106,7 +148,7 @@ export function createWatchesRouter(requireAuth, options = {}) {
       sourceId: source._id,
       title: title || source.name,
       priority,
-      createdVia,
+      createdVia: source.type === 'search' ? 'search' : createdVia,
       focusTerms: focusTerms ?? [],
     });
 

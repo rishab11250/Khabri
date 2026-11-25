@@ -95,7 +95,9 @@
     "checklistTitle": "આગળનાં પગલાં",
     "muteWatch": "આ દેખરેખના એલર્ટ બંધ કરો",
     "unmuteWatch": "એલર્ટ ચાલુ કરો",
-    "mutedDone": "દેખરેખ મ્યૂટ થઈ."
+    "mutedDone": "દેખરેખ મ્યૂટ થઈ.",
+    "addDeadline": "તારીખ સાચવો: {{label}} ({{iso}})",
+    "deadlineSaved": "અંતિમ તારીખ ખાતામાં સાચવાયું."
   },
   "watching": {
     "title": "દેખરેખ યાદી",
@@ -113,7 +115,23 @@
   },
   "deadlines": {
     "title": "અંતિમ તારીખ ખાતું",
-    "empty": "હજુ સુધી કોઈ અંતિમ તારીખ નોંધાયેલ નથી. સૂચનાઓની તારીખો અહીં દેખાશે."
+    "empty": "હજુ સુધી કોઈ અંતિમ તારીખ નોંધાયેલ નથી. સૂચનાઓની તારીખો અહીં દેખાશે.",
+    "listView": "યાદી",
+    "calendarView": "કૅલેન્ડર",
+    "addTitle": "અંતિમ તારીખ ઉમેરો",
+    "labelPlaceholder": "દા.ત. GATE 2026 છેલ્લી તારીખ",
+    "datePlaceholder": "YYYY-MM-DD",
+    "invalidDate": "તારીખ YYYY-MM-DD માં લખો.",
+    "labelRequired": "શીર્ષક દાખલ કરો.",
+    "daysLeft": "{{count}} દિવસ બાકી",
+    "dueToday": "આજે છેલ્લી તારીખ",
+    "expired": "સમાપ્ત",
+    "movedFrom": "તારીખ બદલાઈ: {{old}} -> {{next}}",
+    "addToCalendar": "કૅલેન્ડરમાં ઉમેરો",
+    "addedToCalendar": "કૅલેન્ડરમાં ઉમેરાયું",
+    "markDone": "પૂર્ણ",
+    "reopen": "ફરી ખોલો",
+    "remindersActive": "T-7, T-1 અને T-0 એલર્ટ સક્રિય"
   },
   "discover": {
     "title": "શોધો",
@@ -123,6 +141,30 @@
     "follow": "ઉમેરો",
     "following": "દેખરેખમાં",
     "demoBadge": "ડેમો"
+  },
+  "add": {
+    "title": "દેખરેખ ઉમેરો",
+    "pasteLink": "લિંક પેસ્ટ કરો",
+    "scanPhoto": "ફોટો સ્કેન",
+    "browseCatalog": "કેટલોગ જુઓ",
+    "clipboardTitle": "કોપી કરેલી સૂચના લિંક મળી",
+    "watchLink": "લિંક તપાસો",
+    "linkTitle": "સૂચના URL ઉમેરો",
+    "urlLabel": "સત્તાવાર URL",
+    "urlPlaceholder": "https://ssc.gov.in/notices",
+    "invalidUrl": "માન્ય http/https URL દાખલ કરો.",
+    "checkUrl": "URL તપાસો",
+    "jsUnsupported": "આ પેજ JavaScript પર ચાલે છે — તેના બદલે સર્ચ વોચ બનાવી શકો છો.",
+    "confirmWatch": "દેખરેખની પુષ્ટિ કરો",
+    "confirmSearchWatch": "સર્ચ વોચ બનાવો",
+    "photoTitle": "ફોટોથી દેખરેખ",
+    "photoSubtitle": "છાપેલી સૂચના અથવા અખબારના કટિંગનો ફોટો લો (દરરોજ 5 સુધી).",
+    "cameraPermissionText": "સૂચના સ્કેન કરવા કેમેરા મંજૂરી આપો, અથવા ગેલેરીમાંથી પસંદ કરો.",
+    "allowCamera": "કેમેરા મંજૂરી આપો",
+    "capturePhoto": "ફોટો લો અને સ્કેન કરો",
+    "scanningPhoto": "સૂચના વંચાઈ રહી છે...",
+    "pickGallery": "ગેલેરીમાંથી પસંદ કરો",
+    "proposalsTitle": "સૂચવેલ દેખરેખ"
   },
   "me": {
     "title": "મારી પ્રોફાઇલ",

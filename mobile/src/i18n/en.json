@@ -95,7 +95,9 @@
     "checklistTitle": "What to do next",
     "muteWatch": "Mute alerts for this watch",
     "unmuteWatch": "Unmute alerts",
-    "mutedDone": "Watch muted."
+    "mutedDone": "Watch muted.",
+    "addDeadline": "Save deadline: {{label}} ({{iso}})",
+    "deadlineSaved": "Deadline saved to ledger."
   },
   "watching": {
     "title": "Watching",
@@ -113,7 +115,23 @@
   },
   "deadlines": {
     "title": "Deadline Ledger",
-    "empty": "No deadlines tracked yet. Dates from notices appear here."
+    "empty": "No deadlines tracked yet. Dates from notices appear here.",
+    "listView": "List",
+    "calendarView": "Calendar",
+    "addTitle": "Add deadline",
+    "labelPlaceholder": "e.g. GATE 2026 Last Date",
+    "datePlaceholder": "YYYY-MM-DD",
+    "invalidDate": "Enter date as YYYY-MM-DD.",
+    "labelRequired": "Enter a deadline title.",
+    "daysLeft": "{{count}}d left",
+    "dueToday": "Due today",
+    "expired": "Passed",
+    "movedFrom": "Moved from {{old}} -> {{next}}",
+    "addToCalendar": "Add to calendar",
+    "addedToCalendar": "In calendar",
+    "markDone": "Done",
+    "reopen": "Reopen",
+    "remindersActive": "Local alerts set for T-7, T-1 & T-0"
   },
   "discover": {
     "title": "Discover",
@@ -123,6 +141,30 @@
     "follow": "Watch",
     "following": "Watching",
     "demoBadge": "DEMO"
+  },
+  "add": {
+    "title": "Add a Watch",
+    "pasteLink": "Paste link",
+    "scanPhoto": "Scan photo",
+    "browseCatalog": "Browse catalog",
+    "clipboardTitle": "Copied notice link detected",
+    "watchLink": "Inspect link",
+    "linkTitle": "Watch a notice URL",
+    "urlLabel": "Official URL",
+    "urlPlaceholder": "https://ssc.gov.in/notices",
+    "invalidUrl": "Enter a valid http/https URL.",
+    "checkUrl": "Check URL",
+    "jsUnsupported": "Needs JavaScript rendering — we can watch it via Search instead.",
+    "confirmWatch": "Confirm Watch",
+    "confirmSearchWatch": "Create Search Watch",
+    "photoTitle": "Photo-to-Watch",
+    "photoSubtitle": "Photograph a printed notice or newspaper clipping (up to 5/day).",
+    "cameraPermissionText": "Allow camera access to scan a printed notice, or pick from your gallery.",
+    "allowCamera": "Allow camera",
+    "capturePhoto": "Capture & Scan",
+    "scanningPhoto": "Reading notice...",
+    "pickGallery": "Choose from gallery",
+    "proposalsTitle": "Suggested Watches"
   },
   "me": {
     "title": "Me",

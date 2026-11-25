@@ -95,7 +95,9 @@
     "checklistTitle": "आगे क्या करें",
     "muteWatch": "इस निगरानी के अलर्ट बंद करें",
     "unmuteWatch": "अलर्ट चालू करें",
-    "mutedDone": "निगरानी म्यूट की गई।"
+    "mutedDone": "निगरानी म्यूट की गई।",
+    "addDeadline": "तिथि सहेजें: {{label}} ({{iso}})",
+    "deadlineSaved": "समय-सीमा खाते में सहेजा गया।"
   },
   "watching": {
     "title": "निगरानी सूची",
@@ -113,7 +115,23 @@
   },
   "deadlines": {
     "title": "समय-सीमा खाता",
-    "empty": "अभी कोई अंतिम तिथि दर्ज नहीं है। सूचनाओं की तिथियाँ यहाँ दिखेंगी।"
+    "empty": "अभी कोई अंतिम तिथि दर्ज नहीं है। सूचनाओं की तिथियाँ यहाँ दिखेंगी।",
+    "listView": "सूची",
+    "calendarView": "कैलेंडर",
+    "addTitle": "अंतिम तिथि जोड़ें",
+    "labelPlaceholder": "जैसे GATE 2026 अंतिम तिथि",
+    "datePlaceholder": "YYYY-MM-DD",
+    "invalidDate": "तिथि YYYY-MM-DD में लिखें।",
+    "labelRequired": "शीर्षक दर्ज करें।",
+    "daysLeft": "{{count}} दिन शेष",
+    "dueToday": "आज अंतिम तिथि",
+    "expired": "समाप्त",
+    "movedFrom": "तिथि बदली: {{old}} -> {{next}}",
+    "addToCalendar": "कैलेंडर में जोड़ें",
+    "addedToCalendar": "कैलेंडर में जुड़ा",
+    "markDone": "पूर्ण",
+    "reopen": "पुनः खोलें",
+    "remindersActive": "T-7, T-1 और T-0 अलर्ट सक्रिय"
   },
   "discover": {
     "title": "खोजें",
@@ -123,6 +141,30 @@
     "follow": "जोड़ें",
     "following": "निगरानी में",
     "demoBadge": "डेमो"
+  },
+  "add": {
+    "title": "निगरानी जोड़ें",
+    "pasteLink": "लिंक पेस्ट करें",
+    "scanPhoto": "फ़ोटो स्कैन",
+    "browseCatalog": "कैटलॉग देखें",
+    "clipboardTitle": "कॉपी किया गया सूचना लिंक मिला",
+    "watchLink": "लिंक जाँचें",
+    "linkTitle": "सूचना URL जोड़ें",
+    "urlLabel": "आधिकारिक URL",
+    "urlPlaceholder": "https://ssc.gov.in/notices",
+    "invalidUrl": "मान्य http/https URL दर्ज करें।",
+    "checkUrl": "URL जाँचें",
+    "jsUnsupported": "यह पेज JavaScript पर चलता है — इसके लिए सर्च वॉच बना सकते हैं।",
+    "confirmWatch": "निगरानी की पुष्टि करें",
+    "confirmSearchWatch": "सर्च वॉच बनाएँ",
+    "photoTitle": "फ़ोटो से निगरानी",
+    "photoSubtitle": "छपी हुई सूचना या अख़बार की कटिंग की फ़ोटो लें (प्रतिदिन 5 तक)।",
+    "cameraPermissionText": "सूचना स्कैन करने के लिए कैमरा अनुमति दें, या गैलरी से चुनें।",
+    "allowCamera": "कैमरा चालू करें",
+    "capturePhoto": "फ़ोटो लें और स्कैन करें",
+    "scanningPhoto": "सूचना पढ़ी जा रही है...",
+    "pickGallery": "गैलरी से चुनें",
+    "proposalsTitle": "सुझाई गई निगरानियाँ"
   },
   "me": {
     "title": "मेरी प्रोफ़ाइल",

@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p8
+*.p12
+*.jks
+*.keystore
+
+# Expo & React Native
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.orig.*
+ios/
+android/
+
+# Backend build & coverage
+backend/dist/
+backend/build/
+coverage/
+*.tsbuildinfo
+
+# Logs & OS
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.DS_Store
+Thumbs.db

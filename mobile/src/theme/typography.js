@@ -1,0 +1,67 @@
+import { Fraunces_600SemiBold, Fraunces_700Bold } from '@expo-google-fonts/fraunces';
+import {
+  NotoSans_400Regular,
+  NotoSans_500Medium,
+  NotoSans_700Bold,
+} from '@expo-google-fonts/noto-sans';
+import {
+  NotoSansDevanagari_400Regular,
+  NotoSansDevanagari_700Bold,
+} from '@expo-google-fonts/noto-sans-devanagari';
+import {
+  NotoSansGujarati_400Regular,
+  NotoSansGujarati_700Bold,
+} from '@expo-google-fonts/noto-sans-gujarati';
+import { NotoSerifDevanagari_700Bold } from '@expo-google-fonts/noto-serif-devanagari';
+import { NotoSerifGujarati_700Bold } from '@expo-google-fonts/noto-serif-gujarati';
+
+export const fontAssets = {
+  Fraunces_600SemiBold,
+  Fraunces_700Bold,
+  NotoSans_400Regular,
+  NotoSans_500Medium,
+  NotoSans_700Bold,
+  NotoSansDevanagari_400Regular,
+  NotoSansDevanagari_700Bold,
+  NotoSansGujarati_400Regular,
+  NotoSansGujarati_700Bold,
+  NotoSerifDevanagari_700Bold,
+  NotoSerifGujarati_700Bold,
+};
+
+export function getFontFamilies(language) {
+  if (language === 'hi') {
+    return {
+      headline: 'NotoSerifDevanagari_700Bold',
+      headlineSemi: 'NotoSerifDevanagari_700Bold',
+      body: 'NotoSansDevanagari_400Regular',
+      bodyMedium: 'NotoSansDevanagari_700Bold',
+      bodyBold: 'NotoSansDevanagari_700Bold',
+    };
+  }
+  if (language === 'gu') {
+    return {
+      headline: 'NotoSerifGujarati_700Bold',
+      headlineSemi: 'NotoSerifGujarati_700Bold',
+      body: 'NotoSansGujarati_400Regular',
+      bodyMedium: 'NotoSansGujarati_700Bold',
+      bodyBold: 'NotoSansGujarati_700Bold',
+    };
+  }
+  return {
+    headline: 'Fraunces_700Bold',
+    headlineSemi: 'Fraunces_600SemiBold',
+    body: 'NotoSans_400Regular',
+    bodyMedium: 'NotoSans_500Medium',
+    bodyBold: 'NotoSans_700Bold',
+  };
+}
+
+export const typeScale = {
+  masthead: { fontSize: 28, lineHeight: 34 },
+  title: { fontSize: 20, lineHeight: 26 },
+  section: { fontSize: 16, lineHeight: 22 },
+  body: { fontSize: 15, lineHeight: 22 },
+  caption: { fontSize: 13, lineHeight: 18 },
+  tabular: { fontVariant: ['tabular-nums'] },
+};

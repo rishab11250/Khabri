@@ -1,0 +1,41 @@
+{
+  "app": {
+    "name": "Khabri",
+    "tagline": "Subah ka akhbaar — official notices, no rumours.",
+    "unofficialDisclaimer": "Khabri is an independent, unofficial tool. Always verify on the linked official portal."
+  },
+  "tabs": {
+    "today": "Today",
+    "watching": "Watching",
+    "deadlines": "Deadlines",
+    "discover": "Discover",
+    "me": "Me"
+  },
+  "today": {
+    "masthead": "KHABRI DAILY",
+    "dateline": "All India · {{date}}",
+    "emptyTitle": "Sab shaant hai. Koi nayi khabar nahi.",
+    "emptySubtitle": "Add an official exam, recruitment, or scholarship page from Discover to start watching.",
+    "newChange": "Kabootar aaya hai."
+  },
+  "watching": {
+    "title": "Watching",
+    "empty": "No active watches yet. Pick a source from Discover."
+  },
+  "deadlines": {
+    "title": "Deadline Ledger",
+    "empty": "No deadlines tracked yet. Dates from notices appear here."
+  },
+  "discover": {
+    "title": "Discover",
+    "subtitle": "Browse verified official portals or paste a notice link."
+  },
+  "me": {
+    "title": "Me",
+    "language": "Language",
+    "theme": "Edition Theme",
+    "themeLight": "Subah ka akhbaar (Light)",
+    "themeDark": "Raat ka akhbaar (Dark)",
+    "themeSystem": "Follow device"
+  }
+}

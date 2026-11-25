@@ -88,6 +88,16 @@ export const api = {
   createDeadline: (body) => apiRequest('/v1/deadlines', { method: 'POST', body }),
   patchDeadline: (id, body) => apiRequest(`/v1/deadlines/${id}`, { method: 'PATCH', body }),
   deleteDeadline: (id) => apiRequest(`/v1/deadlines/${id}`, { method: 'DELETE' }),
+  getCircles: () => apiRequest('/v1/circles'),
+  createCircle: (body) => apiRequest('/v1/circles', { method: 'POST', body }),
+  joinCircle: (inviteCode) =>
+    apiRequest('/v1/circles/join', { method: 'POST', body: { inviteCode } }),
+  getCircle: (id) => apiRequest(`/v1/circles/${id}`),
+  addCircleWatch: (circleId, sourceId) =>
+    apiRequest(`/v1/circles/${circleId}/watches`, { method: 'POST', body: { sourceId } }),
+  removeCircleMember: (circleId, userId) =>
+    apiRequest(`/v1/circles/${circleId}/members/${userId}`, { method: 'DELETE' }),
+  askKhabri: (body) => apiRequest('/v1/ask', { method: 'POST', body }),
   intakeLink: (body) => apiRequest('/v1/intake/link', { method: 'POST', body }),
   intakePhoto: async (asset) => {
     if (!isApiConfigured) {

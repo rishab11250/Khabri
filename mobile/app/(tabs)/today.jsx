@@ -40,23 +40,36 @@ export default function TodayScreen() {
           borderBottomWidth: theme.borders.double,
           paddingBottom: theme.spacing.sm,
           marginBottom: theme.spacing.md,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: theme.spacing.sm,
         }}
       >
-        <Text style={[typeScale.masthead, { color: theme.colors.ink, fontFamily: fonts.headline }]}>
-          {t('today.masthead')}
-        </Text>
-        <Text
-          style={[
-            typeScale.caption,
-            typeScale.tabular,
-            { color: theme.colors.muted, fontFamily: fonts.body, marginTop: theme.spacing.xs },
-          ]}
-        >
-          {t('today.dateline', {
-            state: profile?.state || t('onboarding.allIndia'),
-            date: formattedDate,
-          })}
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text
+            style={[typeScale.masthead, { color: theme.colors.ink, fontFamily: fonts.headline }]}
+          >
+            {t('today.masthead')}
+          </Text>
+          <Text
+            style={[
+              typeScale.caption,
+              typeScale.tabular,
+              { color: theme.colors.muted, fontFamily: fonts.body, marginTop: theme.spacing.xs },
+            ]}
+          >
+            {t('today.dateline', {
+              state: profile?.state || t('onboarding.allIndia'),
+              date: formattedDate,
+            })}
+          </Text>
+        </View>
+        <NewspaperButton
+          variant="secondary"
+          label={t('ask.title')}
+          onPress={() => router.push('/ask')}
+        />
       </View>
 
       <FlatList

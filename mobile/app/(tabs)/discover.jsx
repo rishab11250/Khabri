@@ -54,6 +54,11 @@ export default function DiscoverScreen() {
     queryFn: api.getWatches,
   });
 
+  const trendingQuery = useQuery({
+    queryKey: ['trending'],
+    queryFn: api.getTrending,
+  });
+
   const watchBySourceId = new Map((watchesQuery.data?.watches || []).map((w) => [w.sourceId, w]));
 
   const toggleMutation = useMutation({
@@ -199,6 +204,72 @@ export default function DiscoverScreen() {
       <FlatList
         data={catalogQuery.data?.sources ?? []}
         keyExtractor={(item) => item.id}
+        ListHeaderComponent={
+          (trendingQuery.data?.sources?.length ?? 0) > 0 ? (
+            <View style={{ marginBottom: theme.spacing.md }}>
+              <Text
+                style={[
+                  typeScale.caption,
+                  {
+                    color: theme.colors.muted,
+                    fontFamily: fonts.bodyBold,
+                    marginBottom: theme.spacing.xs,
+                  },
+                ]}
+              >
+                {t('discover.trendingTitle')}
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: theme.spacing.sm }}
+              >
+                {trendingQuery.data.sources.slice(0, 6).map((src) => {
+                  const watched = watchBySourceId.get(src.id);
+                  return (
+                    <Pressable
+                      key={src.id}
+                      accessibilityRole="button"
+                      onPress={() => toggleMutation.mutate({ source: src, existingWatch: watched })}
+                      style={{
+                        backgroundColor: watched ? theme.colors.accent : theme.colors.card,
+                        borderColor: theme.colors.rule,
+                        borderWidth: theme.borders.hairline,
+                        paddingHorizontal: theme.spacing.md,
+                        paddingVertical: theme.spacing.sm,
+                        maxWidth: 180,
+                      }}
+                    >
+                      <Text
+                        numberOfLines={1}
+                        style={[
+                          typeScale.caption,
+                          {
+                            color: watched ? theme.colors.onAccent : theme.colors.ink,
+                            fontFamily: fonts.bodyBold,
+                          },
+                        ]}
+                      >
+                        {src.name}
+                      </Text>
+                      <Text
+                        style={[
+                          typeScale.caption,
+                          {
+                            color: watched ? theme.colors.onAccent : theme.colors.muted,
+                            fontFamily: fonts.body,
+                          },
+                        ]}
+                      >
+                        {watched ? t('discover.following') : `+ ${t('discover.follow')}`}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          ) : null
+        }
         refreshControl={
           <RefreshControl
             refreshing={catalogQuery.isRefetching}

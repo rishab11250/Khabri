@@ -142,7 +142,37 @@
     "allCategories": "બધા",
     "follow": "ઉમેરો",
     "following": "દેખરેખમાં",
-    "demoBadge": "ડેમો"
+    "demoBadge": "ડેમો",
+    "trendingTitle": "ચર્ચિત સત્તાવાર સૂચનાઓ"
+  },
+  "circles": {
+    "title": "સર્કલ",
+    "subtitle": "સહપાઠીઓ અથવા પરિવાર સાથે મળીને સૂચનાઓ પર નજર રાખો.",
+    "createLabel": "નવા સર્કલનું નામ",
+    "createPlaceholder": "દા.ત. CSE 2026 બેચ",
+    "createBtn": "સર્કલ બનાવો",
+    "joinBtn": "કોડથી જોડાઓ",
+    "joinTitle": "સર્કલમાં જોડાઓ",
+    "codeLabel": "6-અક્ષર આમંત્રણ કોડ",
+    "codePlaceholder": "ABC123",
+    "inviteCode": "કોડ: {{code}}",
+    "copyCode": "કોડ કોપી કરો",
+    "copied": "કોપી થયું",
+    "shareInvite": "લિંક શેર કરો",
+    "inviteContact": "સંપર્કમાંથી આમંત્રણ આપો",
+    "membersTitle": "સભ્યો ({{count}}/30)",
+    "sharedWatches": "સહિયારી દેખરેખ",
+    "addFromWatching": "તમારી દેખરેખ ઉમેરો",
+    "empty": "હજુ કોઈ સર્કલ નથી. નવું બનાવો અથવા કોડથી જોડાઓ."
+  },
+  "ask": {
+    "title": "ખબરીને પૂછો",
+    "subtitle": "ફક્ત તમારી દેખરેખ હેઠળની સૂચનાઓ અને સ્નેપશોટ પર આધારિત જવાબ.",
+    "scopeAll": "બધી દેખરેખ",
+    "placeholder": "આ અઠવાડિયે શું બદલાયું?",
+    "send": "પૂછો",
+    "remaining": "આજે {{count}}/10 બાકી",
+    "empty": "તમારી દેખરેખ હેઠળની તારીખો, પાત્રતા કે ફેરફારો વિશે પૂછો."
   },
   "add": {
     "title": "દેખરેખ ઉમેરો",

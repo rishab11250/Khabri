@@ -65,6 +65,13 @@ export default {
           calendarPermission: 'Khabri can add exam and application deadlines to your calendar.',
         },
       ],
+      [
+        'expo-contacts',
+        {
+          contactsPermission:
+            'Khabri lets you pick contacts to invite to your study or family Circle.',
+        },
+      ],
       'expo-notifications',
     ],
     experiments: {

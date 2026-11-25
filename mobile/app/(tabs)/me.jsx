@@ -197,6 +197,16 @@ export default function MeScreen() {
         </View>
 
         <View style={{ gap: theme.spacing.sm, marginBottom: theme.spacing.xl }}>
+          <NewspaperButton
+            variant="secondary"
+            label={t('circles.title')}
+            onPress={() => router.push('/circles')}
+          />
+          <NewspaperButton
+            variant="secondary"
+            label={t('ask.title')}
+            onPress={() => router.push('/ask')}
+          />
           <NewspaperButton variant="secondary" label={t('me.checkBackend')} onPress={checkHealth} />
           {healthText ? (
             <Text

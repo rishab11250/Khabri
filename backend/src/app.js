@@ -8,8 +8,10 @@ import { createDemoRouter } from './demo/demo.route.js';
 import { createAuthMiddleware } from './middleware/auth.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { globalRateLimit } from './middleware/rateLimit.js';
+import { createAskRouter } from './modules/ask/ask.route.js';
 import { createCatalogRouter } from './modules/catalog/catalog.route.js';
 import { createChecklistRouter } from './modules/checklist/checklist.route.js';
+import { createCirclesRouter } from './modules/circles/circles.route.js';
 import { createDeadlinesRouter } from './modules/deadlines/deadlines.route.js';
 import { createDevicesRouter } from './modules/devices/devices.route.js';
 import { createChangesRouter, createFeedRouter } from './modules/feed/feed.route.js';
@@ -48,6 +50,8 @@ export function createApp(options = {}) {
   app.use('/v1/changes', createChangesRouter(requireAuth, options.changesOptions));
   app.use('/v1/checklist', createChecklistRouter(requireAuth));
   app.use('/v1/deadlines', createDeadlinesRouter(requireAuth));
+  app.use('/v1/circles', createCirclesRouter(requireAuth));
+  app.use('/v1/ask', createAskRouter(requireAuth, options.askOptions));
   app.use('/v1/me', createUsersRouter(requireAuth, { deleteAuthUser: options.deleteAuthUser }));
 
   app.use(notFoundHandler);

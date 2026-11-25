@@ -21,4 +21,6 @@ Response envelope: `{ "success": boolean, "data": T | null, "error": { "code": s
 - `POST /v1/changes/:id/translate` — Translate explanation & checklist (`en`|`hi`|`gu`), cached per change.
 - `PATCH /v1/checklist/:id` — Toggle action checklist item `{ done }`.
 - `GET, POST, PATCH, DELETE /v1/deadlines` — Deadline Ledger CRUD + moved-date history.
+- `GET, POST /v1/circles`, `POST /v1/circles/join`, `GET /v1/circles/:id`, `POST /v1/circles/:id/watches`, `DELETE /v1/circles/:id/members/:userId` — Circles shared watches (30-member cap).
+- `POST /v1/ask` — Grounded Q&A over user's watched changes/snapshots (10/day cap).
 - `GET /demo/board`, `POST /demo/board` — Demo Notice Board HTML/JSON and mutations (`DEMO_MODE=true`).

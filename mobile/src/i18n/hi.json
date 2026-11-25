@@ -142,7 +142,37 @@
     "allCategories": "सभी",
     "follow": "जोड़ें",
     "following": "निगरानी में",
-    "demoBadge": "डेमो"
+    "demoBadge": "डेमो",
+    "trendingTitle": "चर्चित आधिकारिक सूचनाएँ"
+  },
+  "circles": {
+    "title": "सर्कल",
+    "subtitle": "दोस्तों या परिवार के साथ मिलकर सूचनाओं की निगरानी करें।",
+    "createLabel": "नए सर्कल का नाम",
+    "createPlaceholder": "जैसे CSE 2026 बैच",
+    "createBtn": "सर्कल बनाएँ",
+    "joinBtn": "कोड से जुड़ें",
+    "joinTitle": "सर्कल में जुड़ें",
+    "codeLabel": "6-अक्षर आमंत्रण कोड",
+    "codePlaceholder": "ABC123",
+    "inviteCode": "कोड: {{code}}",
+    "copyCode": "कोड कॉपी करें",
+    "copied": "कॉपी हुआ",
+    "shareInvite": "लिंक शेयर करें",
+    "inviteContact": "कॉन्टैक्ट से आमंत्रित करें",
+    "membersTitle": "सदस्य ({{count}}/30)",
+    "sharedWatches": "साझा निगरानियाँ",
+    "addFromWatching": "अपनी निगरानी जोड़ें",
+    "empty": "अभी कोई सर्कल नहीं है। नया बनाएँ या कोड से जुड़ें।"
+  },
+  "ask": {
+    "title": "ख़बरी से पूछें",
+    "subtitle": "केवल आपकी निगरानी वाली सूचनाओं और स्नैपशॉट पर आधारित उत्तर।",
+    "scopeAll": "सभी निगरानियाँ",
+    "placeholder": "इस सप्ताह क्या बदला?",
+    "send": "पूछें",
+    "remaining": "आज {{count}}/10 शेष",
+    "empty": "अपनी निगरानी वाली परीक्षाओं, तिथियों या बदलावों के बारे में पूछें।"
   },
   "add": {
     "title": "निगरानी जोड़ें",

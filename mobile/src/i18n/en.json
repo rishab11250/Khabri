@@ -142,7 +142,37 @@
     "allCategories": "All",
     "follow": "Watch",
     "following": "Watching",
-    "demoBadge": "DEMO"
+    "demoBadge": "DEMO",
+    "trendingTitle": "Trending Official Notices"
+  },
+  "circles": {
+    "title": "Circles",
+    "subtitle": "Follow notices together with classmates or family.",
+    "createLabel": "New circle name",
+    "createPlaceholder": "e.g. CSE 2026 Group",
+    "createBtn": "Create Circle",
+    "joinBtn": "Join with code",
+    "joinTitle": "Join a Circle",
+    "codeLabel": "6-character invite code",
+    "codePlaceholder": "ABC123",
+    "inviteCode": "Code: {{code}}",
+    "copyCode": "Copy code",
+    "copied": "Copied",
+    "shareInvite": "Share invite link",
+    "inviteContact": "Invite from contacts",
+    "membersTitle": "Members ({{count}}/30)",
+    "sharedWatches": "Shared watches",
+    "addFromWatching": "Add one of your watches",
+    "empty": "No Circles yet. Create one or join with an invite code."
+  },
+  "ask": {
+    "title": "Ask Khabri",
+    "subtitle": "Grounded only in your watched notices and stored snapshots.",
+    "scopeAll": "All watches",
+    "placeholder": "What changed this week?",
+    "send": "Ask",
+    "remaining": "{{count}}/10 left today",
+    "empty": "Ask a question about dates, eligibility, or changes across your watches."
   },
   "add": {
     "title": "Add a Watch",

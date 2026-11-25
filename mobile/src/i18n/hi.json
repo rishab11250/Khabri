@@ -71,14 +71,45 @@
   },
   "today": {
     "masthead": "ख़बरी दैनिक",
-    "dateline": "भारत · {{date}}",
+    "dateline": "{{state}} · {{date}}",
     "emptyTitle": "सब शांत है। कोई नई ख़बर नहीं।",
     "emptySubtitle": "निगरानी शुरू करने के लिए 'खोजें' से कोई आधिकारिक परीक्षा या भर्ती पोर्टल जोड़ें।",
-    "newChange": "कबूतर आया है।"
+    "newChange": "कबूतर आया है।",
+    "loadMore": "पुरानी ख़बरें देखें"
+  },
+  "card": {
+    "unknownSource": "आधिकारिक स्रोत",
+    "impactHigh": "ज़रूरी",
+    "impactMedium": "ध्यान दें",
+    "impactLow": "सूचना",
+    "trustOfficial": "पक्की ख़बर",
+    "trustOfficialSub": "Official source",
+    "trustReported": "सुनी है",
+    "trustReportedSub": "Reported",
+    "trustUnverified": "अफ़वाह?",
+    "trustUnverifiedSub": "Unverified",
+    "before": "पहले",
+    "after": "अब",
+    "aiNote": "AI-जनित सारांश, कृपया आधिकारिक स्रोत जाँचें",
+    "openSource": "आधिकारिक लिंक खोलें ->",
+    "checklistTitle": "आगे क्या करें",
+    "muteWatch": "इस निगरानी के अलर्ट बंद करें",
+    "unmuteWatch": "अलर्ट चालू करें",
+    "mutedDone": "निगरानी म्यूट की गई।"
   },
   "watching": {
     "title": "निगरानी सूची",
-    "empty": "अभी कोई निगरानी सक्रिय नहीं है। 'खोजें' से स्रोत चुनें।"
+    "empty": "अभी कोई निगरानी सक्रिय नहीं है। 'खोजें' से स्रोत चुनें।",
+    "lastChecked": "जाँच: {{time}}",
+    "neverChecked": "पहली जाँच शेष",
+    "unsupported": "JS आवश्यक (सर्च वॉच उपयोग करें)",
+    "circuitOpen": "अस्थायी रूप से रुका (साइट त्रुटि)",
+    "mute": "म्यूट",
+    "muted": "म्यूटेड",
+    "instant": "तुरंत",
+    "normal": "दैनिक",
+    "refresh": "रीफ़्रेश",
+    "remove": "हटाएँ"
   },
   "deadlines": {
     "title": "समय-सीमा खाता",
@@ -86,7 +117,12 @@
   },
   "discover": {
     "title": "खोजें",
-    "subtitle": "सत्यापित आधिकारिक पोर्टल देखें या सूचना लिंक जोड़ें।"
+    "subtitle": "सत्यापित आधिकारिक पोर्टल देखें और दो टैप में निगरानी जोड़ें।",
+    "searchPlaceholder": "SSC, CUET, राज्य या परीक्षा खोजें...",
+    "allCategories": "सभी",
+    "follow": "जोड़ें",
+    "following": "निगरानी में",
+    "demoBadge": "डेमो"
   },
   "me": {
     "title": "मेरी प्रोफ़ाइल",

@@ -71,14 +71,45 @@
   },
   "today": {
     "masthead": "ખબરી દૈનિક",
-    "dateline": "ભારત · {{date}}",
+    "dateline": "{{state}} · {{date}}",
     "emptyTitle": "બધું શાંત છે. કોઈ નવી ખબર નથી.",
     "emptySubtitle": "દેખરેખ શરૂ કરવા માટે 'શોધો'માંથી સત્તાવાર પરીક્ષા અથવા ભરતી પોર્ટલ ઉમેરો.",
-    "newChange": "કબૂતર આવ્યું છે."
+    "newChange": "કબૂતર આવ્યું છે.",
+    "loadMore": "જૂની ખબરો જુઓ"
+  },
+  "card": {
+    "unknownSource": "સત્તાવાર સ્ત્રોત",
+    "impactHigh": "જરૂરી",
+    "impactMedium": "ધ્યાન આપો",
+    "impactLow": "માહિતી",
+    "trustOfficial": "પાક્કી ખબર",
+    "trustOfficialSub": "Official source",
+    "trustReported": "સાંભળ્યું છે",
+    "trustReportedSub": "Reported",
+    "trustUnverified": "અફવા?",
+    "trustUnverifiedSub": "Unverified",
+    "before": "પહેલાં",
+    "after": "હવે",
+    "aiNote": "AI દ્વારા બનાવેલ, સત્તાવાર સ્ત્રોત તપાસો",
+    "openSource": "સત્તાવાર લિંક ખોલો ->",
+    "checklistTitle": "આગળનાં પગલાં",
+    "muteWatch": "આ દેખરેખના એલર્ટ બંધ કરો",
+    "unmuteWatch": "એલર્ટ ચાલુ કરો",
+    "mutedDone": "દેખરેખ મ્યૂટ થઈ."
   },
   "watching": {
     "title": "દેખરેખ યાદી",
-    "empty": "હજુ સુધી કોઈ દેખરેખ સક્રિય નથી. 'શોધો'માંથી સ્ત્રોત પસંદ કરો."
+    "empty": "હજુ સુધી કોઈ દેખરેખ સક્રિય નથી. 'શોધો'માંથી સ્ત્રોત પસંદ કરો.",
+    "lastChecked": "તપાસ: {{time}}",
+    "neverChecked": "પ્રથમ તપાસ બાકી",
+    "unsupported": "JS જરૂરી (સર્ચ વોચ વાપરો)",
+    "circuitOpen": "અસ્થાયી રૂપે રોકાયેલ (સાઇટ ભૂલ)",
+    "mute": "મ્યૂટ",
+    "muted": "મ્યૂટેડ",
+    "instant": "તાત્કાલિક",
+    "normal": "દૈનિક",
+    "refresh": "રિફ્રેશ",
+    "remove": "દૂર કરો"
   },
   "deadlines": {
     "title": "અંતિમ તારીખ ખાતું",
@@ -86,7 +117,12 @@
   },
   "discover": {
     "title": "શોધો",
-    "subtitle": "ચકાસાયેલ સત્તાવાર પોર્ટલ જુઓ અથવા સૂચના લિંક ઉમેરો."
+    "subtitle": "ચકાસાયેલ સત્તાવાર પોર્ટલ જુઓ અને બે ટેપમાં દેખરેખ શરૂ કરો.",
+    "searchPlaceholder": "SSC, CUET, રાજ્ય અથવા પરીક્ષા શોધો...",
+    "allCategories": "બધા",
+    "follow": "ઉમેરો",
+    "following": "દેખરેખમાં",
+    "demoBadge": "ડેમો"
   },
   "me": {
     "title": "મારી પ્રોફાઇલ",

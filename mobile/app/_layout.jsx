@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import * as Notifications from 'expo-notifications';
+import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { AppState } from 'react-native';
@@ -9,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../src/i18n';
 import { api } from '../src/lib/api';
 import { isApiConfigured } from '../src/lib/env';
+import { extractChangeIdFromResponse, registerForPushNotificationsAsync } from '../src/lib/push';
 import { supabase } from '../src/lib/supabase';
 import { useSessionStore } from '../src/store/session';
 import { useSettingsStore } from '../src/store/settings';
@@ -22,7 +24,9 @@ const queryClient = new QueryClient();
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(fontAssets);
   const theme = useTheme();
+  const router = useRouter();
   const hydrated = useSessionStore((s) => s.hydrated);
+  const session = useSessionStore((s) => s.session);
   const setHydrated = useSessionStore((s) => s.setHydrated);
   const setSession = useSessionStore((s) => s.setSession);
   const setProfile = useSessionStore((s) => s.setProfile);
@@ -91,6 +95,35 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError, hydrated]);
+
+  useEffect(() => {
+    if (session) {
+      registerForPushNotificationsAsync();
+    }
+  }, [session]);
+
+  useEffect(() => {
+    let active = true;
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (!active || !response) return;
+      const changeId = extractChangeIdFromResponse(response);
+      if (changeId) {
+        router.push(`/change/${changeId}`);
+      }
+    });
+
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const changeId = extractChangeIdFromResponse(response);
+      if (changeId) {
+        router.push(`/change/${changeId}`);
+      }
+    });
+
+    return () => {
+      active = false;
+      sub.remove();
+    };
+  }, [router]);
 
   if ((!fontsLoaded && !fontError) || !hydrated) {
     return null;

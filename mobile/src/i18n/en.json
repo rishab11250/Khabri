@@ -71,14 +71,45 @@
   },
   "today": {
     "masthead": "KHABRI DAILY",
-    "dateline": "All India · {{date}}",
+    "dateline": "{{state}} · {{date}}",
     "emptyTitle": "Sab shaant hai. Koi nayi khabar nahi.",
     "emptySubtitle": "Add an official exam, recruitment, or scholarship page from Discover to start watching.",
-    "newChange": "Kabootar aaya hai."
+    "newChange": "Kabootar aaya hai.",
+    "loadMore": "Load older khabar"
+  },
+  "card": {
+    "unknownSource": "Official Source",
+    "impactHigh": "ZAROORI",
+    "impactMedium": "DHYAN DEIN",
+    "impactLow": "FYI",
+    "trustOfficial": "PAKKI KHABAR",
+    "trustOfficialSub": "Official source",
+    "trustReported": "SUNI HAI",
+    "trustReportedSub": "Reported",
+    "trustUnverified": "AFWAH?",
+    "trustUnverifiedSub": "Unverified",
+    "before": "BEFORE",
+    "after": "AFTER",
+    "aiNote": "AI-generated, check the source",
+    "openSource": "Open official source ->",
+    "checklistTitle": "What to do next",
+    "muteWatch": "Mute alerts for this watch",
+    "unmuteWatch": "Unmute alerts",
+    "mutedDone": "Watch muted."
   },
   "watching": {
     "title": "Watching",
-    "empty": "No active watches yet. Pick a source from Discover."
+    "empty": "No active watches yet. Pick a source from Discover.",
+    "lastChecked": "Checked: {{time}}",
+    "neverChecked": "Pending first check",
+    "unsupported": "Needs JS (use Search watch)",
+    "circuitOpen": "Paused temporarily (site errors)",
+    "mute": "Mute",
+    "muted": "Muted",
+    "instant": "Instant",
+    "normal": "Digest",
+    "refresh": "Refresh",
+    "remove": "Remove"
   },
   "deadlines": {
     "title": "Deadline Ledger",
@@ -86,7 +117,12 @@
   },
   "discover": {
     "title": "Discover",
-    "subtitle": "Browse verified official portals or paste a notice link."
+    "subtitle": "Browse verified official portals and start watching in two taps.",
+    "searchPlaceholder": "Search UPSC, SSC, CUET, state...",
+    "allCategories": "All",
+    "follow": "Watch",
+    "following": "Watching",
+    "demoBadge": "DEMO"
   },
   "me": {
     "title": "Me",

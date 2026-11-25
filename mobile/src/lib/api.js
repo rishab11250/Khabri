@@ -12,9 +12,7 @@ export class ApiError extends Error {
 }
 
 async function getAccessToken() {
-  if (!supabase) {
-    return null;
-  }
+  if (!supabase) return null;
   const { data } = await supabase.auth.getSession();
   return data?.session?.access_token ?? null;
 }
@@ -63,4 +61,22 @@ export const api = {
   getMe: () => apiRequest('/v1/me'),
   patchMe: (body) => apiRequest('/v1/me', { method: 'PATCH', body }),
   deleteMe: () => apiRequest('/v1/me', { method: 'DELETE' }),
+  registerDevice: (body) => apiRequest('/v1/devices', { method: 'POST', body }),
+  getCatalog: ({ category, state, q } = {}) => {
+    const params = new URLSearchParams();
+    if (category) params.set('category', category);
+    if (state) params.set('state', state);
+    if (q) params.set('q', q);
+    const qs = params.toString();
+    return apiRequest(`/v1/catalog${qs ? `?${qs}` : ''}`, { auth: false });
+  },
+  getTrending: () => apiRequest('/v1/catalog/trending', { auth: false }),
+  getWatches: () => apiRequest('/v1/watches'),
+  createWatch: (body) => apiRequest('/v1/watches', { method: 'POST', body }),
+  patchWatch: (id, body) => apiRequest(`/v1/watches/${id}`, { method: 'PATCH', body }),
+  deleteWatch: (id) => apiRequest(`/v1/watches/${id}`, { method: 'DELETE' }),
+  refreshWatch: (id) => apiRequest(`/v1/watches/${id}/refresh`, { method: 'POST' }),
+  getFeed: (cursor) =>
+    apiRequest(`/v1/feed${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`),
+  getChange: (id) => apiRequest(`/v1/changes/${id}`),
 };

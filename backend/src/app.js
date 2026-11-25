@@ -9,8 +9,11 @@ import { createAuthMiddleware } from './middleware/auth.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { globalRateLimit } from './middleware/rateLimit.js';
 import { createCatalogRouter } from './modules/catalog/catalog.route.js';
+import { createDevicesRouter } from './modules/devices/devices.route.js';
+import { createChangesRouter, createFeedRouter } from './modules/feed/feed.route.js';
 import { createHealthRouter } from './modules/health/health.route.js';
 import { createUsersRouter } from './modules/users/users.route.js';
+import { createWatchesRouter } from './modules/watches/watches.route.js';
 
 export function createApp(options = {}) {
   const app = express();
@@ -35,6 +38,10 @@ export function createApp(options = {}) {
   );
   app.use('/demo', createDemoRouter({ demoMode: options.demoMode }));
   app.use('/v1/catalog', createCatalogRouter());
+  app.use('/v1/devices', createDevicesRouter(requireAuth));
+  app.use('/v1/watches', createWatchesRouter(requireAuth, { tickOptions: options.tickOptions }));
+  app.use('/v1/feed', createFeedRouter(requireAuth));
+  app.use('/v1/changes', createChangesRouter(requireAuth));
   app.use('/v1/me', createUsersRouter(requireAuth, { deleteAuthUser: options.deleteAuthUser }));
 
   app.use(notFoundHandler);

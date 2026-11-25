@@ -3,6 +3,7 @@ import { resolveTrustTag } from '../ai/trust.js';
 import { Change, Deadline, JobLock, Snapshot, Source } from '../models/index.js';
 import { persistFollowersDataForChange } from './deadlines.js';
 import { diffListings, diffPages } from './diff.js';
+import { dispatchChangeNotifications, processPushReceipts } from './dispatcher.js';
 import { extractSignals } from './extract.js';
 import { fetchListing } from './fetchers/listing.js';
 import { fetchPage } from './fetchers/page.js';
@@ -297,6 +298,19 @@ export async function processSource(source, options = {}) {
 
     await persistFollowersDataForChange({ change: changeDoc, source });
 
+    if (!options.skipPush) {
+      try {
+        await dispatchChangeNotifications({
+          change: changeDoc,
+          source,
+          now,
+          expoClient: options.expoClient,
+        });
+      } catch {
+        // Non-fatal: push failure should not roll back persisted change
+      }
+    }
+
     if (options.onChangePersisted) {
       await options.onChangePersisted({ change: changeDoc, source });
     }
@@ -348,6 +362,14 @@ export async function runTick(options = {}) {
     for (const source of dueSources) {
       const res = await processSource(source, { ...options, now });
       results.push(res);
+    }
+
+    if (!options.skipPush && !options.skipReceipts) {
+      try {
+        await processPushReceipts(options.expoClient);
+      } catch {
+        // Non-fatal receipt check
+      }
     }
 
     return {

@@ -1,4 +1,7 @@
+import { analyzeChangeWithRouter } from '../ai/analyzeChange.js';
+import { resolveTrustTag } from '../ai/trust.js';
 import { Change, Deadline, JobLock, Snapshot, Source } from '../models/index.js';
+import { persistFollowersDataForChange } from './deadlines.js';
 import { diffListings, diffPages } from './diff.js';
 import { extractSignals } from './extract.js';
 import { fetchListing } from './fetchers/listing.js';
@@ -99,44 +102,6 @@ function computeNextDueAt(intervalMin, now, jitterMs) {
   const delta =
     typeof jitterMs === 'number' ? jitterMs : Math.floor((Math.random() * 2 - 1) * maxJitter);
   return new Date(now.getTime() + baseMs + delta);
-}
-
-function defaultRulesAnalysis({ diffResult, material, afterSignals, sourceName }) {
-  if (diffResult.type === 'listing') {
-    const topItem = diffResult.added[0] || diffResult.updated[0]?.after;
-    const before =
-      diffResult.updated[0]?.before?.title ||
-      (diffResult.removed[0] ? diffResult.removed[0].title : 'Previous notice list');
-    const after = topItem
-      ? `${topItem.title}${topItem.dateText ? ` (${topItem.dateText})` : ''}`
-      : 'Notice list updated';
-
-    return {
-      before,
-      after,
-      why: `Detected ${material.kind.replace('_', ' ')} on ${sourceName}.`,
-      checklist: ['Open the official source link to verify the full notice.'],
-      dates: (afterSignals.dates || []).map((d) => ({
-        label: d.label,
-        iso: d.iso,
-        confidence: d.confidence,
-      })),
-      confidence: 0.6,
-    };
-  }
-
-  return {
-    before: diffResult.beforeExcerpt || 'Previous page wording',
-    after: diffResult.afterExcerpt || 'Updated page wording',
-    why: `Material ${material.kind.replace('_', ' ')} detected on ${sourceName}.`,
-    checklist: ['Open the official source link and review the updated text.'],
-    dates: (afterSignals.dates || []).map((d) => ({
-      label: d.label,
-      iso: d.iso,
-      confidence: d.confidence,
-    })),
-    confidence: 0.6,
-  };
 }
 
 async function fetchBySourceType(source, fetchOptions) {
@@ -287,22 +252,22 @@ export async function processSource(source, options = {}) {
       return { sourceId: String(source._id), status: 'filtered_noise', changeCreated: false };
     }
 
+    const analysisContext = {
+      source,
+      diffResult,
+      material,
+      beforeSignals,
+      afterSignals,
+      beforeText,
+      afterText,
+      pdfSupplement,
+    };
+
     const analysisData = options.analyzeChange
-      ? await options.analyzeChange({
-          source,
-          diffResult,
-          material,
-          beforeSignals,
-          afterSignals,
-          beforeText,
-          afterText,
-          pdfSupplement,
-        })
-      : defaultRulesAnalysis({
-          diffResult,
-          material,
-          afterSignals,
-          sourceName: source.name,
+      ? await options.analyzeChange(analysisContext)
+      : await analyzeChangeWithRouter(analysisContext, {
+          router: options.aiRouter,
+          skipCache: options.skipAiCache,
         });
 
     const evidence = [{ url: source.url, label: source.name }];
@@ -316,19 +281,21 @@ export async function processSource(source, options = {}) {
     const changeDoc = await Change.create({
       sourceId: source._id,
       detectedAt: now,
-      kind: material.kind,
+      kind: analysisData.kind || material.kind,
       impact: analysisData.impact || material.impact,
       before: analysisData.before,
       after: analysisData.after,
       evidence,
-      trust: source.trust || 'unverified',
+      trust: resolveTrustTag({ source }),
       analysis: {
-        why: analysisData.why,
+        why: analysisData.whyItMatters ?? analysisData.why ?? '',
         checklist: analysisData.checklist || [],
         dates: analysisData.dates || [],
       },
       confidence: analysisData.confidence ?? 0.6,
     });
+
+    await persistFollowersDataForChange({ change: changeDoc, source });
 
     if (options.onChangePersisted) {
       await options.onChangePersisted({ change: changeDoc, source });

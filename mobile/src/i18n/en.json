@@ -13,7 +13,10 @@
     "retry": "Retry",
     "errorGeneric": "Something went wrong. Please try again.",
     "setupMissingTitle": "Environment setup needed",
-    "setupMissingBody": "Add EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, and EXPO_PUBLIC_API_URL to mobile/.env."
+    "setupMissingBody": "Add EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY, and EXPO_PUBLIC_API_URL to mobile/.env.",
+    "offlineBanner": "Offline mode · Showing cached notices",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
   },
   "auth": {
     "signInTitle": "Sign in to Khabri",
@@ -99,6 +102,7 @@
     "addDeadline": "Save deadline: {{label}} ({{iso}})",
     "deadlineSaved": "Deadline saved to ledger.",
     "shareCard": "Share Khabar Card",
+    "exportPdf": "Export PDF",
     "explainIn": "Samjhao (Language)"
   },
   "watching": {
@@ -133,7 +137,8 @@
     "addedToCalendar": "In calendar",
     "markDone": "Done",
     "reopen": "Reopen",
-    "remindersActive": "Local alerts set for T-7, T-1 & T-0"
+    "remindersActive": "Local alerts set for T-7, T-1 & T-0",
+    "exportCsv": "Export CSV"
   },
   "discover": {
     "title": "Discover",
@@ -212,6 +217,34 @@
     "backendChecking": "Checking...",
     "backendOnline": "Connected ({{db}})",
     "backendOffline": "Unreachable",
-    "checkBackend": "Check API"
+    "checkBackend": "Check API",
+    "digestSection": "Daily Digest & Quiet Hours",
+    "digestTimeHelp": "Receive one consolidated daily edition at:",
+    "quietHoursTitle": "Quiet Hours (Night silence)",
+    "quietHoursHours": "{{start}} to {{end}}",
+    "quietHoursBypass": "Allow urgent notices (< 24h deadline) to alert",
+    "security": "Security & Privacy"
+  },
+  "lock": {
+    "title": "App Lock (Biometrics)",
+    "description": "Require fingerprint or face recognition to open Khabri",
+    "badge": "CONFIDENTIAL",
+    "subtitle": "Authenticate with fingerprint or face to view your notices.",
+    "unlockBtn": "Unlock Khabri",
+    "prompt": "Unlock Khabri",
+    "enablePrompt": "Authenticate to enable App Lock",
+    "disablePrompt": "Authenticate to disable App Lock",
+    "failed": "Authentication failed. Try again."
+  },
+  "about": {
+    "title": "About & Disclaimers",
+    "version": "Edition v{{version}}",
+    "disclaimerHeading": "Official Notice Disclaimer",
+    "disclaimerBody": "Khabri is an independent, unofficial notice watcher. We crawl and summarize publicly accessible official Indian government and university portals. Always verify original notification PDFs on the official website before taking action or paying fees.",
+    "privacyHeading": "Local-First & Data Privacy",
+    "privacyBody": "Your watched sources, offline cache, and preferences are stored locally on your device. We do not sell user data or track ad IDs.",
+    "sourcesHeading": "Verified Source Catalog",
+    "sourcesBody": "Our directory catalogs verified portals including UPSC, SSC, NTA, CBSE, state recruitment commissions, and UGC-recognized universities.",
+    "viewCatalog": "Browse Official Catalog"
   }
 }

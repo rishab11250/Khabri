@@ -8,6 +8,7 @@ import { KhabarCard } from '../../src/components/KhabarCard';
 import { NewspaperButton } from '../../src/components/NewspaperButton';
 import { ScreenShell } from '../../src/components/ScreenShell';
 import { api } from '../../src/lib/api';
+import { exportChangePdf } from '../../src/lib/export';
 import { shareKhabarCardImage } from '../../src/lib/shareCard';
 import { useOfflineQueueStore } from '../../src/store/offlineQueue';
 import { useSettingsStore } from '../../src/store/settings';
@@ -131,6 +132,15 @@ export default function ChangeDetailScreen() {
     }
   };
 
+  const handleExportPdf = async () => {
+    setActionError('');
+    try {
+      await exportChangePdf(card, card.sourceName || t('card.unknownSource'));
+    } catch (err) {
+      setActionError(err?.message || t('common.errorGeneric'));
+    }
+  };
+
   return (
     <ScreenShell>
       <View style={{ marginBottom: theme.spacing.md }}>
@@ -224,8 +234,19 @@ export default function ChangeDetailScreen() {
             </View>
           </ViewShot>
 
-          <View style={{ marginBottom: theme.spacing.md }}>
-            <NewspaperButton label={t('card.shareCard')} onPress={handleShare} />
+          <View
+            style={{ flexDirection: 'row', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}
+          >
+            <View style={{ flex: 1 }}>
+              <NewspaperButton label={t('card.shareCard')} onPress={handleShare} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <NewspaperButton
+                variant="secondary"
+                label={t('card.exportPdf')}
+                onPress={handleExportPdf}
+              />
+            </View>
           </View>
 
           {displayChecklist.length > 0 ? (

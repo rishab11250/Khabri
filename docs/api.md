@@ -5,6 +5,7 @@ Response envelope: `{ "success": boolean, "data": T | null, "error": { "code": s
 ## Endpoints
 - `GET /health` — Service & MongoDB connection health.
 - `POST /internal/tick` — Scheduled tick trigger (requires `x-tick-secret` header).
+- `POST /internal/digest` — Scheduled/manual daily digest dispatch (requires `x-tick-secret` header, optional `{ force: boolean }`).
 - `GET /v1/me` — Fetch/auto-provision current user profile (Bearer Supabase JWT).
 - `PATCH /v1/me` — Update profile, language (`en`|`hi`|`gu`), state, interests, quiet hours, digest time, onboarding flag.
 - `DELETE /v1/me` — Delete user, cascade user records, decrement watched source follower counts, and delete Supabase user if service role configured.

@@ -36,6 +36,7 @@ describe('Auth, /v1/me, and /internal/tick', () => {
     app = createApp({
       tickSecret: TEST_ENV.INTERNAL_TICK_SECRET,
       verifyJwt: (token) => verifySupabaseJwt(token, TEST_ENV),
+      deleteAuthUser: async () => ({ deleted: true }),
     });
   });
 

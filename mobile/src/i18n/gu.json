@@ -13,7 +13,10 @@
     "retry": "ફરી પ્રયાસ કરો",
     "errorGeneric": "કંઈક ખોટું થયું. ફરી પ્રયાસ કરો.",
     "setupMissingTitle": "એન્વાયર્નમેન્ટ સેટઅપ જરૂરી",
-    "setupMissingBody": "mobile/.env માં EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY અને EXPO_PUBLIC_API_URL ઉમેરો."
+    "setupMissingBody": "mobile/.env માં EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY અને EXPO_PUBLIC_API_URL ઉમેરો.",
+    "offlineBanner": "ઓફલાઇન મોડ · કેશ્ડ સૂચનાઓ દેખાય છે",
+    "enabled": "સક્રિય",
+    "disabled": "નિષ્ક્રિય"
   },
   "auth": {
     "signInTitle": "ખબરીમાં સાઇન ઇન કરો",
@@ -99,6 +102,7 @@
     "addDeadline": "તારીખ સાચવો: {{label}} ({{iso}})",
     "deadlineSaved": "અંતિમ તારીખ ખાતામાં સાચવાયું.",
     "shareCard": "ખબર કાર્ડ શેર કરો",
+    "exportPdf": "PDF એક્સપોર્ટ કરો",
     "explainIn": "સમજાવો (ભાષા)"
   },
   "watching": {
@@ -133,7 +137,8 @@
     "addedToCalendar": "કૅલેન્ડરમાં ઉમેરાયું",
     "markDone": "પૂર્ણ",
     "reopen": "ફરી ખોલો",
-    "remindersActive": "T-7, T-1 અને T-0 એલર્ટ સક્રિય"
+    "remindersActive": "T-7, T-1 અને T-0 એલર્ટ સક્રિય",
+    "exportCsv": "CSV એક્સપોર્ટ કરો"
   },
   "discover": {
     "title": "શોધો",
@@ -212,6 +217,34 @@
     "backendChecking": "ચકાસાઈ રહ્યું છે...",
     "backendOnline": "કનેક્ટેડ ({{db}})",
     "backendOffline": "ઉપલબ્ધ નથી",
-    "checkBackend": "API ચકાસો"
+    "checkBackend": "API ચકાસો",
+    "digestSection": "દૈનિક ડાયજેસ્ટ અને શાંત સમય",
+    "digestTimeHelp": "દરરોજ એક સંકલિત આવૃત્તિ મેળવો:",
+    "quietHoursTitle": "શાંત સમય (રાત્રિ શાંતિ)",
+    "quietHoursHours": "{{start}} થી {{end}}",
+    "quietHoursBypass": "તાત્કાલિક સૂચનાઓને (< 24h) મંજૂરી આપો",
+    "security": "સુરક્ષા અને ગોપનીયતા"
+  },
+  "lock": {
+    "title": "એપ લોક (બાયોમેટ્રિક્સ)",
+    "description": "ખબરી ખોલવા માટે ફિંગરપ્રિન્ટ અથવા ફેસ લોક જરૂરી કરો",
+    "badge": "ખાનગી",
+    "subtitle": "તમારી સૂચનાઓ જોવા માટે બાયોમેટ્રિક ચકાસણી કરો.",
+    "unlockBtn": "ખબરી અનલોક કરો",
+    "prompt": "ખબરી અનલોક કરો",
+    "enablePrompt": "એપ લોક ચાલુ કરવા માટે ચકાસણી કરો",
+    "disablePrompt": "એપ લોક બંધ કરવા માટે ચકાસણી કરો",
+    "failed": "ચકાસણી નિષ્ફળ. ફરી પ્રયાસ કરો."
+  },
+  "about": {
+    "title": "એપ વિશે અને ડિસ્ક્લેમર",
+    "version": "આવૃત્તિ v{{version}}",
+    "disclaimerHeading": "સત્તાવાર સૂચના ડિસ્ક્લેમર",
+    "disclaimerBody": "ખબરી એક સ્વતંત્ર, બિનસત્તાવાર સૂચના ટ્રેકર છે. અમે જાહેરમાં ઉપલબ્ધ સરકારી અને યુનિવર્સિટી પોર્ટલ વાંચીએ છીએ. કોઈપણ પગલું લેતા પહેલાં હંમેશા મૂળ સત્તાવાર વેબસાઇટ પર તપાસો.",
+    "privacyHeading": "લોકલ-ફર્સ્ટ અને ડેટા ગોપનીયતા",
+    "privacyBody": "તમારી દેખરેખ યાદી, ઓફલાઇન કેશ અને પસંદગીઓ તમારા ઉપકરણ પર જ સંગ્રહિત થાય છે. અમે વપરાશકર્તાનો ડેટા વેચતા નથી.",
+    "sourcesHeading": "ચકાસાયેલ સ્ત્રોત સૂચિ",
+    "sourcesBody": "અમારી સૂચિમાં UPSC, SSC, NTA, CBSE, રાજ્ય પસંદગી બોર્ડ અને UGC માન્ય યુનિવર્સિટીઓનો સમાવેશ થાય છે.",
+    "viewCatalog": "સત્તાવાર પોર્ટલ સૂચિ જુઓ"
   }
 }

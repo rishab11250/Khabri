@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { NewspaperButton } from '../../src/components/NewspaperButton';
 import { ScreenShell } from '../../src/components/ScreenShell';
 import { api } from '../../src/lib/api';
+import { authenticateBiometrics, isBiometricsAvailable } from '../../src/lib/biometrics';
 import { isApiConfigured } from '../../src/lib/env';
 import { supabase } from '../../src/lib/supabase';
 import { useSessionStore } from '../../src/store/session';
@@ -18,14 +19,37 @@ const LANGUAGES = [
   { code: 'gu', label: 'ગુજરાતી' },
 ];
 
+const DIGEST_TIMES = [
+  { time: '08:00', label: '08:00 AM' },
+  { time: '09:00', label: '09:00 AM' },
+  { time: '20:00', label: '08:00 PM' },
+];
+
 export default function MeScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const theme = useTheme();
   const fonts = getFontFamilies(i18n.language);
-  const { language, setLanguage, themePreference, setThemePreference } = useSettingsStore();
+  const {
+    language,
+    setLanguage,
+    themePreference,
+    setThemePreference,
+    appLockEnabled,
+    setAppLockEnabled,
+    quietHours,
+    setQuietHours,
+    digestTime,
+    setDigestTime,
+  } = useSettingsStore();
   const { session, profile, setProfile, clearSession } = useSessionStore();
   const [healthText, setHealthText] = useState('');
+  const [biometricsSupported, setBiometricsSupported] = useState(false);
+  const [statusMsg, setStatusMsg] = useState('');
+
+  useEffect(() => {
+    isBiometricsAvailable().then(setBiometricsSupported);
+  }, []);
 
   const themeOptions = [
     { key: 'system', label: t('me.themeSystem') },
@@ -42,6 +66,56 @@ export default function MeScreen() {
       } catch {
         // Keep local preference if API is temporarily unreachable
       }
+    }
+  };
+
+  const handleToggleQuietHours = async () => {
+    const next = { ...quietHours, enabled: !quietHours.enabled };
+    setQuietHours(next);
+    if (session && isApiConfigured) {
+      try {
+        const res = await api.patchMe({ quietHours: next });
+        setProfile(res.user);
+      } catch {
+        // local setting persisted
+      }
+    }
+  };
+
+  const handleToggleBypassUrgent = async () => {
+    const next = { ...quietHours, bypassUrgent: !quietHours.bypassUrgent };
+    setQuietHours(next);
+    if (session && isApiConfigured) {
+      try {
+        const res = await api.patchMe({ quietHours: next });
+        setProfile(res.user);
+      } catch {
+        // local setting persisted
+      }
+    }
+  };
+
+  const handleDigestTimeChange = async (time) => {
+    setDigestTime(time);
+    if (session && isApiConfigured) {
+      try {
+        const res = await api.patchMe({ digestTime: time });
+        setProfile(res.user);
+      } catch {
+        // local setting persisted
+      }
+    }
+  };
+
+  const handleToggleAppLock = async () => {
+    setStatusMsg('');
+    const ok = await authenticateBiometrics(
+      appLockEnabled ? t('lock.disablePrompt') : t('lock.enablePrompt'),
+    );
+    if (ok) {
+      setAppLockEnabled(!appLockEnabled);
+    } else {
+      setStatusMsg(t('lock.failed'));
     }
   };
 
@@ -196,6 +270,218 @@ export default function MeScreen() {
           })}
         </View>
 
+        {/* F12: Digest & Quiet Hours Section */}
+        <Text
+          style={[
+            typeScale.section,
+            { color: theme.colors.ink, fontFamily: fonts.bodyBold, marginBottom: theme.spacing.sm },
+          ]}
+        >
+          {t('me.digestSection')}
+        </Text>
+        <View style={{ gap: theme.spacing.sm, marginBottom: theme.spacing.xl }}>
+          <Text style={[typeScale.caption, { color: theme.colors.muted, fontFamily: fonts.body }]}>
+            {t('me.digestTimeHelp')}
+          </Text>
+          <View style={[styles.row, { gap: theme.spacing.sm }]}>
+            {DIGEST_TIMES.map((item) => {
+              const active = digestTime === item.time;
+              return (
+                <Pressable
+                  key={item.time}
+                  accessibilityRole="button"
+                  onPress={() => handleDigestTimeChange(item.time)}
+                  style={{
+                    borderWidth: theme.borders.hairline,
+                    borderColor: active ? theme.colors.accent : theme.colors.rule,
+                    backgroundColor: active ? theme.colors.accent : theme.colors.card,
+                    paddingHorizontal: theme.spacing.md,
+                    paddingVertical: theme.spacing.sm,
+                  }}
+                >
+                  <Text
+                    style={[
+                      typeScale.caption,
+                      {
+                        color: active ? theme.colors.onAccent : theme.colors.ink,
+                        fontFamily: fonts.bodyMedium,
+                      },
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View
+            style={{
+              backgroundColor: theme.colors.card,
+              borderWidth: theme.borders.hairline,
+              borderColor: theme.colors.rule,
+              padding: theme.spacing.md,
+              gap: theme.spacing.sm,
+              marginTop: theme.spacing.sm,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={[typeScale.body, { color: theme.colors.ink, fontFamily: fonts.bodyBold }]}
+                >
+                  {t('me.quietHoursTitle')}
+                </Text>
+                <Text
+                  style={[typeScale.caption, { color: theme.colors.muted, fontFamily: fonts.body }]}
+                >
+                  {t('me.quietHoursHours', { start: quietHours.start, end: quietHours.end })}
+                </Text>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleToggleQuietHours}
+                style={{
+                  borderWidth: theme.borders.hairline,
+                  borderColor: quietHours.enabled ? theme.colors.accent : theme.colors.rule,
+                  backgroundColor: quietHours.enabled ? theme.colors.accent : 'transparent',
+                  paddingHorizontal: theme.spacing.md,
+                  paddingVertical: theme.spacing.xs,
+                }}
+              >
+                <Text
+                  style={[
+                    typeScale.caption,
+                    {
+                      color: quietHours.enabled ? theme.colors.onAccent : theme.colors.ink,
+                      fontFamily: fonts.bodyBold,
+                    },
+                  ]}
+                >
+                  {quietHours.enabled ? t('common.enabled') : t('common.disabled')}
+                </Text>
+              </Pressable>
+            </View>
+
+            {quietHours.enabled ? (
+              <Pressable
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: quietHours.bypassUrgent }}
+                onPress={handleToggleBypassUrgent}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: theme.spacing.xs,
+                  paddingTop: theme.spacing.xs,
+                  borderTopWidth: theme.borders.hairline,
+                  borderTopColor: theme.colors.ruleSubtle,
+                }}
+              >
+                <Text
+                  style={[
+                    typeScale.caption,
+                    { color: theme.colors.accent, fontFamily: fonts.bodyBold },
+                  ]}
+                >
+                  {quietHours.bypassUrgent ? '[x]' : '[ ]'}
+                </Text>
+                <Text
+                  style={[typeScale.caption, { color: theme.colors.ink, fontFamily: fonts.body }]}
+                >
+                  {t('me.quietHoursBypass')}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+
+        {/* F15: Biometrics Section */}
+        {biometricsSupported ? (
+          <>
+            <Text
+              style={[
+                typeScale.section,
+                {
+                  color: theme.colors.ink,
+                  fontFamily: fonts.bodyBold,
+                  marginBottom: theme.spacing.sm,
+                },
+              ]}
+            >
+              {t('me.security')}
+            </Text>
+            <View
+              style={{
+                backgroundColor: theme.colors.card,
+                borderWidth: theme.borders.hairline,
+                borderColor: theme.colors.rule,
+                padding: theme.spacing.md,
+                marginBottom: theme.spacing.xl,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <View style={{ flex: 1, paddingRight: theme.spacing.sm }}>
+                <Text
+                  style={[typeScale.body, { color: theme.colors.ink, fontFamily: fonts.bodyBold }]}
+                >
+                  {t('lock.title')}
+                </Text>
+                <Text
+                  style={[typeScale.caption, { color: theme.colors.muted, fontFamily: fonts.body }]}
+                >
+                  {t('lock.description')}
+                </Text>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleToggleAppLock}
+                style={{
+                  borderWidth: theme.borders.hairline,
+                  borderColor: appLockEnabled ? theme.colors.accent : theme.colors.rule,
+                  backgroundColor: appLockEnabled ? theme.colors.accent : 'transparent',
+                  paddingHorizontal: theme.spacing.md,
+                  paddingVertical: theme.spacing.xs,
+                }}
+              >
+                <Text
+                  style={[
+                    typeScale.caption,
+                    {
+                      color: appLockEnabled ? theme.colors.onAccent : theme.colors.ink,
+                      fontFamily: fonts.bodyBold,
+                    },
+                  ]}
+                >
+                  {appLockEnabled ? t('common.enabled') : t('common.disabled')}
+                </Text>
+              </Pressable>
+            </View>
+          </>
+        ) : null}
+
+        {statusMsg ? (
+          <Text
+            style={[
+              typeScale.caption,
+              {
+                color: theme.colors.accent,
+                fontFamily: fonts.bodyMedium,
+                marginBottom: theme.spacing.md,
+              },
+            ]}
+          >
+            {statusMsg}
+          </Text>
+        ) : null}
+
         <View style={{ gap: theme.spacing.sm, marginBottom: theme.spacing.xl }}>
           <NewspaperButton
             variant="secondary"
@@ -206,6 +492,11 @@ export default function MeScreen() {
             variant="secondary"
             label={t('ask.title')}
             onPress={() => router.push('/ask')}
+          />
+          <NewspaperButton
+            variant="secondary"
+            label={t('about.title')}
+            onPress={() => router.push('/about')}
           />
           <NewspaperButton variant="secondary" label={t('me.checkBackend')} onPress={checkHealth} />
           {healthText ? (

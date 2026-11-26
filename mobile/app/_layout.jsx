@@ -5,9 +5,11 @@ import * as Notifications from 'expo-notifications';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { AppState } from 'react-native';
+import { AppState, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../src/i18n';
+import { AppLockModal } from '../src/components/AppLockModal';
+import { OfflineBanner } from '../src/components/OfflineBanner';
 import { api } from '../src/lib/api';
 import { isApiConfigured } from '../src/lib/env';
 import { extractChangeIdFromResponse, registerForPushNotificationsAsync } from '../src/lib/push';
@@ -31,6 +33,12 @@ export default function RootLayout() {
   const setSession = useSessionStore((s) => s.setSession);
   const setProfile = useSessionStore((s) => s.setProfile);
   const setLanguage = useSettingsStore((s) => s.setLanguage);
+  const hydrateSettings = useSettingsStore((s) => s.hydrateSettings);
+  const lock = useSettingsStore((s) => s.lock);
+
+  useEffect(() => {
+    hydrateSettings();
+  }, [hydrateSettings]);
 
   useEffect(() => {
     let mounted = true;
@@ -73,22 +81,21 @@ export default function RootLayout() {
         })
       : null;
 
-    const appStateSub = supabase
-      ? AppState.addEventListener('change', (state) => {
-          if (state === 'active') {
-            supabase.auth.startAutoRefresh();
-          } else {
-            supabase.auth.stopAutoRefresh();
-          }
-        })
-      : null;
+    const appStateSub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        if (supabase) supabase.auth.startAutoRefresh();
+      } else if (state === 'background') {
+        if (supabase) supabase.auth.stopAutoRefresh();
+        lock();
+      }
+    });
 
     return () => {
       mounted = false;
       authSub?.data?.subscription?.unsubscribe();
       appStateSub?.remove();
     };
-  }, [setHydrated, setLanguage, setProfile, setSession]);
+  }, [hydrateSettings, lock, setHydrated, setLanguage, setProfile, setSession]);
 
   useEffect(() => {
     if ((fontsLoaded || fontError) && hydrated) {
@@ -133,12 +140,16 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
         <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: theme.colors.background },
-          }}
-        />
+        <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+          <OfflineBanner />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: theme.colors.background },
+            }}
+          />
+        </View>
+        <AppLockModal />
       </SafeAreaProvider>
     </QueryClientProvider>
   );

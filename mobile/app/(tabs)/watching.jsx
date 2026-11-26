@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
 import { NewspaperButton } from '../../src/components/NewspaperButton';
 import { ScreenShell } from '../../src/components/ScreenShell';
 import { api } from '../../src/lib/api';
+import { readJsonCache, writeJsonCache } from '../../src/lib/fileCache';
 import { getFontFamilies, typeScale } from '../../src/theme/typography';
 import { useTheme } from '../../src/theme/useTheme';
+
+const WATCHES_CACHE_KEY = 'watches-cache.json';
 
 export default function WatchingScreen() {
   const { t, i18n } = useTranslation();
@@ -14,11 +17,29 @@ export default function WatchingScreen() {
   const fonts = getFontFamilies(i18n.language);
   const queryClient = useQueryClient();
   const [actionError, setActionError] = useState('');
+  const [cachedWatches, setCachedWatches] = useState([]);
+
+  useEffect(() => {
+    readJsonCache(WATCHES_CACHE_KEY, []).then((cached) => {
+      if (cached && cached.length > 0) {
+        setCachedWatches(cached);
+      }
+    });
+  }, []);
 
   const watchesQuery = useQuery({
     queryKey: ['watches'],
     queryFn: api.getWatches,
   });
+
+  const rawWatches = watchesQuery.data?.watches;
+  const watches = rawWatches && rawWatches.length > 0 ? rawWatches : (rawWatches ?? cachedWatches);
+
+  useEffect(() => {
+    if (rawWatches && rawWatches.length > 0) {
+      writeJsonCache(WATCHES_CACHE_KEY, rawWatches);
+    }
+  }, [rawWatches]);
 
   const patchMutation = useMutation({
     mutationFn: ({ id, body }) => api.patchWatch(id, body),
@@ -74,7 +95,7 @@ export default function WatchingScreen() {
       ) : null}
 
       <FlatList
-        data={watchesQuery.data?.watches ?? []}
+        data={watches}
         keyExtractor={(item) => item.id}
         refreshControl={
           <RefreshControl

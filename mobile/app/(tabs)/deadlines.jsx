@@ -10,9 +10,13 @@ import { NewspaperButton } from '../../src/components/NewspaperButton';
 import { ScreenShell } from '../../src/components/ScreenShell';
 import { useCountdown } from '../../src/hooks/useCountdown';
 import { api } from '../../src/lib/api';
+import { exportDeadlinesCsv } from '../../src/lib/export';
+import { readJsonCache, writeJsonCache } from '../../src/lib/fileCache';
 import { addDeadlineToDeviceCalendar, syncDeadlineReminders } from '../../src/lib/reminders';
 import { getFontFamilies, typeScale } from '../../src/theme/typography';
 import { useTheme } from '../../src/theme/useTheme';
+
+const DEADLINES_CACHE_KEY = 'deadlines-cache.json';
 
 function MonthCalendar({ deadlines, theme, fonts }) {
   const [monthOffset, setMonthOffset] = useState(0);
@@ -235,6 +239,15 @@ export default function DeadlinesScreen() {
   const [viewMode, setViewMode] = useState('list');
   const [showAdd, setShowAdd] = useState(false);
   const [statusError, setStatusError] = useState('');
+  const [cachedDeadlines, setCachedDeadlines] = useState([]);
+
+  useEffect(() => {
+    readJsonCache(DEADLINES_CACHE_KEY, []).then((cached) => {
+      if (cached && cached.length > 0) {
+        setCachedDeadlines(cached);
+      }
+    });
+  }, []);
 
   const deadlinesQuery = useQuery({
     queryKey: ['deadlines'],
@@ -242,13 +255,24 @@ export default function DeadlinesScreen() {
   });
 
   const rawDeadlines = deadlinesQuery.data?.deadlines;
-  const deadlines = rawDeadlines ?? [];
+  const deadlines =
+    rawDeadlines && rawDeadlines.length > 0 ? rawDeadlines : (rawDeadlines ?? cachedDeadlines);
 
   useEffect(() => {
     if (rawDeadlines && rawDeadlines.length > 0) {
+      writeJsonCache(DEADLINES_CACHE_KEY, rawDeadlines);
       syncDeadlineReminders(rawDeadlines);
     }
   }, [rawDeadlines]);
+
+  const handleExportCsv = async () => {
+    setStatusError('');
+    try {
+      await exportDeadlinesCsv(deadlines);
+    } catch (err) {
+      setStatusError(err?.message || t('common.errorGeneric'));
+    }
+  };
 
   const schema = z.object({
     label: z.string().trim().min(1, t('deadlines.labelRequired')),
@@ -336,6 +360,16 @@ export default function DeadlinesScreen() {
           />
         </View>
       </View>
+
+      {deadlines.length > 0 ? (
+        <View style={{ marginBottom: theme.spacing.md }}>
+          <NewspaperButton
+            variant="secondary"
+            label={t('deadlines.exportCsv')}
+            onPress={handleExportCsv}
+          />
+        </View>
+      ) : null}
 
       {showAdd ? (
         <View

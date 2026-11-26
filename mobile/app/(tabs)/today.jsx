@@ -1,14 +1,19 @@
+import { useEffect, useMemo, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
+import { Kabootar } from '../../src/components/Kabootar';
 import { KhabarCard } from '../../src/components/KhabarCard';
 import { NewspaperButton } from '../../src/components/NewspaperButton';
 import { ScreenShell } from '../../src/components/ScreenShell';
 import { api } from '../../src/lib/api';
+import { readJsonCache, writeJsonCache } from '../../src/lib/fileCache';
 import { useSessionStore } from '../../src/store/session';
 import { getFontFamilies, typeScale } from '../../src/theme/typography';
 import { useTheme } from '../../src/theme/useTheme';
+
+const FEED_CACHE_KEY = 'feed-cache.json';
 
 export default function TodayScreen() {
   const { t, i18n } = useTranslation();
@@ -16,6 +21,15 @@ export default function TodayScreen() {
   const theme = useTheme();
   const fonts = getFontFamilies(i18n.language);
   const profile = useSessionStore((s) => s.profile);
+  const [cachedItems, setCachedItems] = useState([]);
+
+  useEffect(() => {
+    readJsonCache(FEED_CACHE_KEY, []).then((cached) => {
+      if (cached && cached.length > 0) {
+        setCachedItems(cached);
+      }
+    });
+  }, []);
 
   const formattedDate = new Date().toLocaleDateString('en-IN', {
     day: '2-digit',
@@ -30,7 +44,18 @@ export default function TodayScreen() {
     getNextPageParam: (lastPage) => lastPage?.nextCursor ?? undefined,
   });
 
-  const items = feedQuery.data?.pages.flatMap((p) => p.items || []) ?? [];
+  const networkItems = useMemo(
+    () => feedQuery.data?.pages.flatMap((p) => p.items || []) ?? [],
+    [feedQuery.data?.pages],
+  );
+
+  useEffect(() => {
+    if (networkItems.length > 0) {
+      writeJsonCache(FEED_CACHE_KEY, networkItems);
+    }
+  }, [networkItems]);
+
+  const items = networkItems.length > 0 ? networkItems : cachedItems;
 
   return (
     <ScreenShell>
@@ -86,11 +111,11 @@ export default function TodayScreen() {
           <KhabarCard card={item} onPress={() => router.push(`/change/${item.id}`)} />
         )}
         ListEmptyComponent={
-          feedQuery.isLoading ? (
+          feedQuery.isLoading && items.length === 0 ? (
             <Text style={[typeScale.body, { color: theme.colors.muted, fontFamily: fonts.body }]}>
               {t('common.loading')}
             </Text>
-          ) : feedQuery.isError ? (
+          ) : feedQuery.isError && items.length === 0 ? (
             <View style={{ gap: theme.spacing.md }}>
               <Text
                 style={[typeScale.body, { color: theme.colors.accent, fontFamily: fonts.body }]}
@@ -106,12 +131,18 @@ export default function TodayScreen() {
                 borderColor: theme.colors.rule,
                 borderWidth: theme.borders.hairline,
                 padding: theme.spacing.lg,
+                alignItems: 'center',
               }}
             >
+              <Kabootar size={56} flap />
               <Text
                 style={[
                   typeScale.title,
-                  { color: theme.colors.ink, fontFamily: fonts.headlineSemi },
+                  {
+                    color: theme.colors.ink,
+                    fontFamily: fonts.headlineSemi,
+                    marginTop: theme.spacing.sm,
+                  },
                 ]}
               >
                 {t('today.emptyTitle')}
@@ -123,6 +154,7 @@ export default function TodayScreen() {
                     color: theme.colors.muted,
                     fontFamily: fonts.body,
                     marginTop: theme.spacing.sm,
+                    textAlign: 'center',
                   },
                 ]}
               >

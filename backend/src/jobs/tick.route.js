@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { Router } from 'express';
 import { getEnv } from '../config/env.js';
+import { runDigest } from '../engine/digest.js';
 import { runTick } from '../engine/scheduler.js';
 import { AppError, ok } from '../middleware/envelope.js';
 
@@ -19,6 +20,7 @@ function secretsMatch(provided, expected) {
 export function createInternalRouter(options = {}) {
   const router = Router();
   const executeTick = options.runTick ?? runTick;
+  const executeDigest = options.runDigest ?? runDigest;
 
   router.post('/tick', async (req, res, next) => {
     const expectedSecret = options.tickSecret ?? getEnv().INTERNAL_TICK_SECRET;
@@ -29,6 +31,24 @@ export function createInternalRouter(options = {}) {
     }
 
     const summary = await executeTick(options.tickOptions ?? {});
+    return ok(res, {
+      ...summary,
+      ranAt: new Date().toISOString(),
+    });
+  });
+
+  router.post('/digest', async (req, res, next) => {
+    const expectedSecret = options.tickSecret ?? getEnv().INTERNAL_TICK_SECRET;
+    const provided = req.get('x-tick-secret');
+
+    if (!secretsMatch(provided, expectedSecret)) {
+      return next(new AppError(401, 'UNAUTHORIZED', 'Invalid tick secret'));
+    }
+
+    const summary = await executeDigest({
+      ...(options.digestOptions ?? {}),
+      force: req.body?.force === true || req.body?.force === 'true',
+    });
     return ok(res, {
       ...summary,
       ranAt: new Date().toISOString(),

@@ -1,6 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
+import { Kabootar } from '../../src/components/Kabootar';
+import { Masthead } from '../../src/components/Masthead';
 import { NewspaperButton } from '../../src/components/NewspaperButton';
 import { ScreenShell } from '../../src/components/ScreenShell';
 import { useSessionStore } from '../../src/store/session';
@@ -19,7 +21,7 @@ export default function OnboardingLanguageScreen() {
   const router = useRouter();
   const theme = useTheme();
   const { language, setLanguage } = useSettingsStore();
-  const { onboardingDraft, updateOnboardingDraft } = useSessionStore();
+  const { session, onboardingDraft, updateOnboardingDraft } = useSessionStore();
   const fonts = getFontFamilies(language);
 
   const selected = onboardingDraft.language ?? language;
@@ -29,17 +31,29 @@ export default function OnboardingLanguageScreen() {
     updateOnboardingDraft({ language: code });
   };
 
+  const handleContinue = () => {
+    setLanguage(selected);
+    updateOnboardingDraft({ language: selected });
+    if (session) {
+      router.push('/(onboarding)/state');
+    } else {
+      router.replace('/(auth)/sign-in');
+    }
+  };
+
   return (
     <ScreenShell>
-      <Text
-        style={[typeScale.caption, { color: theme.colors.muted, fontFamily: fonts.bodyMedium }]}
-      >
-        {t('onboarding.stepIndicator', { step: 1 })}
-      </Text>
+      <Masthead
+        title={t('app.name')}
+        eyebrowLeft="SUBAH KA AKHBAAR"
+        eyebrowRight={t('onboarding.stepIndicator', { step: 1 })}
+        rightAction={<Kabootar size={44} flap />}
+      />
+
       <Text
         style={[
-          typeScale.masthead,
-          { color: theme.colors.ink, fontFamily: fonts.headline, marginTop: theme.spacing.xs },
+          typeScale.title,
+          { color: theme.colors.ink, fontFamily: fonts.headlineSemi, marginTop: theme.spacing.xs },
         ]}
       >
         {t('onboarding.languageTitle')}
@@ -50,8 +64,8 @@ export default function OnboardingLanguageScreen() {
           {
             color: theme.colors.muted,
             fontFamily: fonts.body,
-            marginTop: theme.spacing.sm,
-            marginBottom: theme.spacing.xl,
+            marginTop: theme.spacing.xs,
+            marginBottom: theme.spacing.lg,
           },
         ]}
       >
@@ -68,8 +82,9 @@ export default function OnboardingLanguageScreen() {
               onPress={() => choose(item.code)}
               style={{
                 backgroundColor: active ? theme.colors.accent : theme.colors.card,
-                borderColor: active ? theme.colors.accent : theme.colors.rule,
+                borderColor: active ? theme.colors.accent : theme.colors.ruleSubtle,
                 borderWidth: theme.borders.hairline,
+                borderRadius: theme.radii.md,
                 padding: theme.spacing.lg,
               }}
             >
@@ -102,10 +117,7 @@ export default function OnboardingLanguageScreen() {
       </View>
 
       <View style={{ paddingBottom: theme.spacing.lg }}>
-        <NewspaperButton
-          label={t('common.continue')}
-          onPress={() => router.push('/(onboarding)/state')}
-        />
+        <NewspaperButton label={t('common.continue')} onPress={handleContinue} />
       </View>
     </ScreenShell>
   );

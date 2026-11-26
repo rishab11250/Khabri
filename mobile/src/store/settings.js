@@ -6,6 +6,7 @@ const SETTINGS_CACHE = 'settings-pref.json';
 
 export const useSettingsStore = create((set, get) => ({
   language: i18n.language || 'en',
+  languageChosen: false,
   themePreference: 'system',
   appLockEnabled: false,
   isLocked: false,
@@ -21,6 +22,7 @@ export const useSettingsStore = create((set, get) => ({
       }
       set({
         language: cached.language || get().language,
+        languageChosen: Boolean(cached.languageChosen ?? cached.language),
         themePreference: cached.themePreference || get().themePreference,
         appLockEnabled: Boolean(cached.appLockEnabled),
         isLocked: Boolean(cached.appLockEnabled),
@@ -35,10 +37,11 @@ export const useSettingsStore = create((set, get) => ({
 
   setLanguage: (language) => {
     i18n.changeLanguage(language);
-    set({ language });
+    set({ language, languageChosen: true });
     const s = get();
     writeJsonCache(SETTINGS_CACHE, {
       language: s.language,
+      languageChosen: true,
       themePreference: s.themePreference,
       appLockEnabled: s.appLockEnabled,
       quietHours: s.quietHours,
@@ -51,6 +54,7 @@ export const useSettingsStore = create((set, get) => ({
     const s = get();
     writeJsonCache(SETTINGS_CACHE, {
       language: s.language,
+      languageChosen: s.languageChosen,
       themePreference: s.themePreference,
       appLockEnabled: s.appLockEnabled,
       quietHours: s.quietHours,
@@ -63,6 +67,7 @@ export const useSettingsStore = create((set, get) => ({
     const s = get();
     writeJsonCache(SETTINGS_CACHE, {
       language: s.language,
+      languageChosen: s.languageChosen,
       themePreference: s.themePreference,
       appLockEnabled: s.appLockEnabled,
       quietHours: s.quietHours,
@@ -75,6 +80,7 @@ export const useSettingsStore = create((set, get) => ({
     const s = get();
     writeJsonCache(SETTINGS_CACHE, {
       language: s.language,
+      languageChosen: s.languageChosen,
       themePreference: s.themePreference,
       appLockEnabled: s.appLockEnabled,
       quietHours: s.quietHours,
@@ -87,6 +93,7 @@ export const useSettingsStore = create((set, get) => ({
     const s = get();
     writeJsonCache(SETTINGS_CACHE, {
       language: s.language,
+      languageChosen: s.languageChosen,
       themePreference: s.themePreference,
       appLockEnabled: s.appLockEnabled,
       quietHours: s.quietHours,

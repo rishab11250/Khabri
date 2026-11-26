@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
+import { Masthead } from '../../src/components/Masthead';
 import { NewspaperButton } from '../../src/components/NewspaperButton';
 import { ScreenShell } from '../../src/components/ScreenShell';
 import { api } from '../../src/lib/api';
@@ -13,6 +15,7 @@ const WATCHES_CACHE_KEY = 'watches-cache.json';
 
 export default function WatchingScreen() {
   const { t, i18n } = useTranslation();
+  const router = useRouter();
   const theme = useTheme();
   const fonts = getFontFamilies(i18n.language);
   const queryClient = useQueryClient();
@@ -66,18 +69,19 @@ export default function WatchingScreen() {
 
   return (
     <ScreenShell>
-      <View
-        style={{
-          borderBottomColor: theme.colors.rule,
-          borderBottomWidth: theme.borders.rule,
-          paddingBottom: theme.spacing.sm,
-          marginBottom: theme.spacing.md,
-        }}
-      >
-        <Text style={[typeScale.title, { color: theme.colors.ink, fontFamily: fonts.headline }]}>
-          {t('watching.title')}
-        </Text>
-      </View>
+      <Masthead
+        title={t('watching.title')}
+        eyebrowLeft="MONITORED PORTALS"
+        eyebrowRight={`${watches.length}/15 ACTIVE`}
+        rightAction={
+          <NewspaperButton
+            size="sm"
+            variant="secondary"
+            label={`+ ${t('tabs.discover')}`}
+            onPress={() => router.push('/(tabs)/discover')}
+          />
+        }
+      />
 
       {actionError ? (
         <Text
@@ -119,18 +123,55 @@ export default function WatchingScreen() {
             <View
               style={{
                 backgroundColor: theme.colors.card,
-                borderColor: theme.colors.rule,
+                borderColor: theme.colors.ruleSubtle,
                 borderWidth: theme.borders.hairline,
+                borderLeftWidth: 3,
+                borderLeftColor: item.muted ? theme.colors.muted : theme.colors.neem,
+                borderRadius: theme.radii.md,
                 padding: theme.spacing.md,
                 marginBottom: theme.spacing.sm,
                 gap: theme.spacing.sm,
               }}
             >
-              <Text
-                style={[typeScale.section, { color: theme.colors.ink, fontFamily: fonts.bodyBold }]}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  gap: theme.spacing.sm,
+                }}
               >
-                {item.title}
-              </Text>
+                <Text
+                  style={[
+                    typeScale.section,
+                    { flex: 1, color: theme.colors.ink, fontFamily: fonts.headlineSemi },
+                  ]}
+                >
+                  {item.title}
+                </Text>
+                <View
+                  style={{
+                    backgroundColor: item.muted ? theme.colors.background : theme.colors.neem,
+                    paddingHorizontal: theme.spacing.sm,
+                    paddingVertical: 2,
+                    borderRadius: theme.radii.xs,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: item.muted ? theme.colors.muted : theme.colors.onNeem,
+                      fontFamily: fonts.bodyBold,
+                      fontSize: 10,
+                    }}
+                  >
+                    {item.muted
+                      ? t('watching.muted').toUpperCase()
+                      : item.priority === 'instant'
+                        ? t('watching.instant').toUpperCase()
+                        : t('watching.normal').toUpperCase()}
+                  </Text>
+                </View>
+              </View>
               <Text
                 style={[
                   typeScale.caption,
@@ -138,7 +179,7 @@ export default function WatchingScreen() {
                   { color: theme.colors.muted, fontFamily: fonts.body },
                 ]}
               >
-                {src?.category} · {checkedStr}
+                {(src?.category || 'notice').toUpperCase()} · {checkedStr}
               </Text>
               {src?.unsupported ? (
                 <Text
@@ -153,6 +194,7 @@ export default function WatchingScreen() {
 
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs }}>
                 <NewspaperButton
+                  size="sm"
                   variant={item.muted ? 'primary' : 'secondary'}
                   label={item.muted ? t('watching.muted') : t('watching.mute')}
                   onPress={() =>
@@ -160,6 +202,7 @@ export default function WatchingScreen() {
                   }
                 />
                 <NewspaperButton
+                  size="sm"
                   variant={item.priority === 'instant' ? 'primary' : 'secondary'}
                   label={item.priority === 'instant' ? t('watching.instant') : t('watching.normal')}
                   onPress={() =>
@@ -170,11 +213,13 @@ export default function WatchingScreen() {
                   }
                 />
                 <NewspaperButton
+                  size="sm"
                   variant="secondary"
                   label={t('watching.refresh')}
                   onPress={() => refreshMutation.mutate(item.id)}
                 />
                 <NewspaperButton
+                  size="sm"
                   variant="secondary"
                   label={t('watching.remove')}
                   onPress={() => deleteMutation.mutate(item.id)}
@@ -184,9 +229,32 @@ export default function WatchingScreen() {
           );
         }}
         ListEmptyComponent={
-          <Text style={[typeScale.body, { color: theme.colors.muted, fontFamily: fonts.body }]}>
-            {watchesQuery.isLoading ? t('common.loading') : t('watching.empty')}
-          </Text>
+          watchesQuery.isLoading ? (
+            <Text style={[typeScale.body, { color: theme.colors.muted, fontFamily: fonts.body }]}>
+              {t('common.loading')}
+            </Text>
+          ) : (
+            <View
+              style={{
+                backgroundColor: theme.colors.card,
+                borderColor: theme.colors.ruleSubtle,
+                borderWidth: theme.borders.hairline,
+                borderRadius: theme.radii.md,
+                padding: theme.spacing.lg,
+                gap: theme.spacing.md,
+              }}
+            >
+              <Text style={[typeScale.body, { color: theme.colors.muted, fontFamily: fonts.body }]}>
+                {t('watching.empty')}
+              </Text>
+              <NewspaperButton
+                size="sm"
+                variant="secondary"
+                label={t('tabs.discover')}
+                onPress={() => router.push('/(tabs)/discover')}
+              />
+            </View>
+          )
         }
       />
     </ScreenShell>

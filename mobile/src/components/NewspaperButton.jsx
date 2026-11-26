@@ -7,6 +7,7 @@ export function NewspaperButton({
   label,
   onPress,
   variant = 'primary',
+  size = 'md',
   disabled = false,
   accessibilityHint,
 }) {
@@ -15,9 +16,10 @@ export function NewspaperButton({
   const fonts = getFontFamilies(language);
 
   const isPrimary = variant === 'primary';
+  const isSmall = size === 'sm';
   const backgroundColor = isPrimary ? theme.colors.accent : theme.colors.card;
   const textColor = isPrimary ? theme.colors.onAccent : theme.colors.ink;
-  const borderColor = isPrimary ? theme.colors.accent : theme.colors.rule;
+  const borderColor = isPrimary ? theme.colors.accent : theme.colors.ruleSubtle;
 
   return (
     <Pressable
@@ -28,18 +30,22 @@ export function NewspaperButton({
       style={({ pressed }) => [
         styles.button,
         {
+          minHeight: isSmall ? 36 : 46,
+          borderRadius: theme.radii.sm,
           backgroundColor,
           borderColor,
           borderWidth: theme.borders.hairline,
-          paddingHorizontal: theme.spacing.lg,
-          paddingVertical: theme.spacing.md,
+          paddingHorizontal: isSmall ? theme.spacing.md : theme.spacing.lg,
+          paddingVertical: isSmall ? theme.spacing.xs : theme.spacing.sm,
           opacity: disabled ? 0.5 : pressed ? 0.85 : 1,
+          transform: [{ scale: pressed && !disabled ? 0.985 : 1 }],
         },
       ]}
     >
       <Text
+        numberOfLines={1}
         style={[
-          typeScale.body,
+          isSmall ? typeScale.caption : typeScale.body,
           styles.label,
           {
             color: textColor,
@@ -55,7 +61,6 @@ export function NewspaperButton({
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 46,
     alignItems: 'center',
     justifyContent: 'center',
   },

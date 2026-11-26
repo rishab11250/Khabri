@@ -41,8 +41,10 @@ export const spacing = {
 
 export const radii = {
   none: 0,
-  xs: 2,
-  sm: 4,
+  xs: 4,
+  sm: 6,
+  md: 10,
+  pill: 999,
 };
 
 export const borders = {

@@ -37,6 +37,30 @@ export function createApp(options = {}) {
   app.use(express.json({ limit: '1mb' }));
 
   app.use('/health', createHealthRouter());
+  app.get('/auth/confirmed', (_req, res) => {
+    res.type('html').send(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Khabri — Email Confirmed</title>
+  <style>
+    body { font-family: Georgia, serif; background: #F4ECDD; color: #1B1A17; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 24px; }
+    .card { background: #FBF6EA; border: 2px solid #1B1A17; padding: 28px; max-width: 420px; text-align: center; }
+    h1 { margin: 0 0 12px; font-size: 24px; }
+    p { margin: 0 0 20px; color: #6B665C; line-height: 1.5; }
+    a { display: inline-block; background: #C8402A; color: #FBF6EA; text-decoration: none; padding: 12px 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>KHABRI</h1>
+    <p>Your email is confirmed. Open the Khabri app on your phone to sign in.</p>
+    <a href="khabri://sign-in">Open Khabri App</a>
+  </div>
+</body>
+</html>`);
+  });
   app.use(
     '/internal',
     createInternalRouter({ tickSecret: options.tickSecret, tickOptions: options.tickOptions }),

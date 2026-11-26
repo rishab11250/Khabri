@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Masthead, SectionHeader } from '../../src/components/Masthead';
 import { NewspaperButton } from '../../src/components/NewspaperButton';
 import { ScreenShell } from '../../src/components/ScreenShell';
 import { INTEREST_CATEGORIES } from '../../src/constants/india';
@@ -30,6 +31,7 @@ export default function DiscoverScreen() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [clipboardUrl, setClipboardUrl] = useState('');
+  const [actionError, setActionError] = useState('');
   const debouncedQuery = useDebounce(search.trim(), 250);
 
   useEffect(() => {
@@ -67,29 +69,29 @@ export default function DiscoverScreen() {
         ? api.deleteWatch(existingWatch.id)
         : api.createWatch({ sourceId: source.id, createdVia: 'catalog' }),
     onSuccess: () => {
+      setActionError('');
       queryClient.invalidateQueries({ queryKey: ['watches'] });
       queryClient.invalidateQueries({ queryKey: ['catalog'] });
       queryClient.invalidateQueries({ queryKey: ['feed'] });
     },
+    onError: (err) => setActionError(err?.message || t('common.errorGeneric')),
   });
+
+  const getCategoryColor = (cat) => {
+    if (cat === 'recruitment') return theme.colors.neel;
+    if (cat === 'scholarship') return theme.colors.haldi;
+    if (cat === 'scheme') return theme.colors.neem;
+    return theme.colors.accent;
+  };
 
   return (
     <ScreenShell>
-      <View
-        style={{
-          borderBottomColor: theme.colors.rule,
-          borderBottomWidth: theme.borders.rule,
-          paddingBottom: theme.spacing.sm,
-          marginBottom: theme.spacing.md,
-        }}
-      >
-        <Text style={[typeScale.title, { color: theme.colors.ink, fontFamily: fonts.headline }]}>
-          {t('discover.title')}
-        </Text>
-        <Text style={[typeScale.caption, { color: theme.colors.muted, fontFamily: fonts.body }]}>
-          {t('discover.subtitle')}
-        </Text>
-      </View>
+      <Masthead
+        title={t('discover.title')}
+        eyebrowLeft="OFFICIAL DIRECTORY"
+        eyebrowRight={`${catalogQuery.data?.sources?.length ?? 0} PORTALS`}
+        subtitle={t('discover.subtitle')}
+      />
 
       <View style={{ flexDirection: 'row', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}>
         <View style={{ flex: 1 }}>
@@ -155,8 +157,9 @@ export default function DiscoverScreen() {
             color: theme.colors.ink,
             fontFamily: fonts.body,
             backgroundColor: theme.colors.card,
-            borderColor: theme.colors.rule,
+            borderColor: theme.colors.ruleSubtle,
             borderWidth: theme.borders.hairline,
+            borderRadius: theme.radii.sm,
             paddingHorizontal: theme.spacing.md,
             paddingVertical: theme.spacing.sm,
             marginBottom: theme.spacing.sm,
@@ -164,11 +167,26 @@ export default function DiscoverScreen() {
         ]}
       />
 
+      {actionError ? (
+        <Text
+          style={[
+            typeScale.caption,
+            {
+              color: theme.colors.accent,
+              fontFamily: fonts.bodyMedium,
+              marginBottom: theme.spacing.xs,
+            },
+          ]}
+        >
+          {actionError}
+        </Text>
+      ) : null}
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={{ maxHeight: 44, marginBottom: theme.spacing.md }}
-        contentContainerStyle={{ gap: theme.spacing.xs, alignItems: 'center' }}
+        style={{ flexGrow: 0, flexShrink: 0, marginBottom: theme.spacing.md }}
+        contentContainerStyle={{ gap: theme.spacing.xs, alignItems: 'center', paddingVertical: 2 }}
       >
         {['', ...INTEREST_CATEGORIES].map((cat) => {
           const active = category === cat;
@@ -179,10 +197,11 @@ export default function DiscoverScreen() {
               onPress={() => setCategory(cat)}
               style={{
                 backgroundColor: active ? theme.colors.accent : theme.colors.card,
-                borderColor: active ? theme.colors.accent : theme.colors.rule,
+                borderColor: active ? theme.colors.accent : theme.colors.ruleSubtle,
                 borderWidth: theme.borders.hairline,
+                borderRadius: theme.radii.pill,
                 paddingHorizontal: theme.spacing.md,
-                paddingVertical: theme.spacing.xs,
+                paddingVertical: 7,
               }}
             >
               <Text
@@ -207,24 +226,13 @@ export default function DiscoverScreen() {
         ListHeaderComponent={
           (trendingQuery.data?.sources?.length ?? 0) > 0 ? (
             <View style={{ marginBottom: theme.spacing.md }}>
-              <Text
-                style={[
-                  typeScale.caption,
-                  {
-                    color: theme.colors.muted,
-                    fontFamily: fonts.bodyBold,
-                    marginBottom: theme.spacing.xs,
-                  },
-                ]}
-              >
-                {t('discover.trendingTitle')}
-              </Text>
+              <SectionHeader label={t('discover.trendingTitle')} />
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ gap: theme.spacing.sm }}
               >
-                {trendingQuery.data.sources.slice(0, 6).map((src) => {
+                {trendingQuery.data.sources.slice(0, 6).map((src, idx) => {
                   const watched = watchBySourceId.get(src.id);
                   return (
                     <Pressable
@@ -233,20 +241,36 @@ export default function DiscoverScreen() {
                       onPress={() => toggleMutation.mutate({ source: src, existingWatch: watched })}
                       style={{
                         backgroundColor: watched ? theme.colors.accent : theme.colors.card,
-                        borderColor: theme.colors.rule,
+                        borderColor: watched ? theme.colors.accent : theme.colors.ruleSubtle,
+                        borderTopWidth: 2,
+                        borderTopColor: watched
+                          ? theme.colors.accent
+                          : getCategoryColor(src.category),
                         borderWidth: theme.borders.hairline,
+                        borderRadius: theme.radii.sm,
                         paddingHorizontal: theme.spacing.md,
                         paddingVertical: theme.spacing.sm,
-                        maxWidth: 180,
+                        maxWidth: 190,
                       }}
                     >
+                      <Text
+                        style={{
+                          color: watched ? theme.colors.onAccent : theme.colors.muted,
+                          fontFamily: fonts.bodyBold,
+                          fontSize: 10,
+                          marginBottom: 2,
+                        }}
+                      >
+                        #{String(idx + 1).padStart(2, '0')} ·{' '}
+                        {(src.category || 'notice').toUpperCase()}
+                      </Text>
                       <Text
                         numberOfLines={1}
                         style={[
                           typeScale.caption,
                           {
                             color: watched ? theme.colors.onAccent : theme.colors.ink,
-                            fontFamily: fonts.bodyBold,
+                            fontFamily: fonts.headlineSemi,
                           },
                         ]}
                       >
@@ -256,12 +280,13 @@ export default function DiscoverScreen() {
                         style={[
                           typeScale.caption,
                           {
-                            color: watched ? theme.colors.onAccent : theme.colors.muted,
-                            fontFamily: fonts.body,
+                            color: watched ? theme.colors.onAccent : theme.colors.accent,
+                            fontFamily: fonts.bodyBold,
+                            marginTop: 2,
                           },
                         ]}
                       >
-                        {watched ? t('discover.following') : `+ ${t('discover.follow')}`}
+                        {watched ? `✓ ${t('discover.following')}` : `+ ${t('discover.follow')}`}
                       </Text>
                     </Pressable>
                   );
@@ -283,8 +308,11 @@ export default function DiscoverScreen() {
             <View
               style={{
                 backgroundColor: theme.colors.card,
-                borderColor: theme.colors.rule,
+                borderColor: theme.colors.ruleSubtle,
                 borderWidth: theme.borders.hairline,
+                borderLeftWidth: 3,
+                borderLeftColor: getCategoryColor(item.category),
+                borderRadius: theme.radii.md,
                 padding: theme.spacing.md,
                 marginBottom: theme.spacing.sm,
                 flexDirection: 'row',
@@ -292,20 +320,51 @@ export default function DiscoverScreen() {
                 gap: theme.spacing.md,
               }}
             >
-              <View style={{ flex: 1 }}>
+              <View style={{ flex: 1, gap: 4 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
+                  <Text
+                    style={{
+                      color: getCategoryColor(item.category),
+                      fontFamily: fonts.bodyBold,
+                      fontSize: 10,
+                      letterSpacing: 0.8,
+                    }}
+                  >
+                    {(item.category || 'notice').toUpperCase()}
+                  </Text>
+                  <Text style={{ color: theme.colors.muted, fontSize: 10 }}>· {item.state}</Text>
+                  {item.isDemo ? (
+                    <View
+                      style={{
+                        backgroundColor: theme.colors.haldi,
+                        paddingHorizontal: 5,
+                        paddingVertical: 1,
+                        borderRadius: theme.radii.xs,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: theme.colors.haldiInk,
+                          fontFamily: fonts.bodyBold,
+                          fontSize: 9,
+                        }}
+                      >
+                        {t('discover.demoBadge')}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
                 <Text
-                  style={[typeScale.body, { color: theme.colors.ink, fontFamily: fonts.bodyBold }]}
+                  style={[
+                    typeScale.body,
+                    { color: theme.colors.ink, fontFamily: fonts.headlineSemi },
+                  ]}
                 >
                   {item.name}
                 </Text>
-                <Text
-                  style={[typeScale.caption, { color: theme.colors.muted, fontFamily: fonts.body }]}
-                >
-                  {item.category} · {item.state}
-                  {item.isDemo ? ` · ${t('discover.demoBadge')}` : ''}
-                </Text>
               </View>
               <NewspaperButton
+                size="sm"
                 variant={existingWatch ? 'secondary' : 'primary'}
                 disabled={toggleMutation.isPending}
                 label={existingWatch ? t('discover.following') : t('discover.follow')}

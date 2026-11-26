@@ -3,9 +3,11 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Pressable, Text, View } from 'react-native';
 import { z } from 'zod';
 import { FormField } from '../../src/components/FormField';
+import { Kabootar } from '../../src/components/Kabootar';
+import { Masthead } from '../../src/components/Masthead';
 import { NewspaperButton } from '../../src/components/NewspaperButton';
 import { ScreenShell } from '../../src/components/ScreenShell';
 import { api } from '../../src/lib/api';
@@ -21,6 +23,7 @@ export default function SignInScreen() {
   const router = useRouter();
   const theme = useTheme();
   const language = useSettingsStore((s) => s.language);
+  const setLanguage = useSettingsStore((s) => s.setLanguage);
   const fonts = getFontFamilies(language);
   const { setSession, setProfile } = useSessionStore();
   const [submitError, setSubmitError] = useState('');
@@ -71,27 +74,55 @@ export default function SignInScreen() {
   return (
     <ScreenShell>
       <ScrollView contentContainerStyle={{ paddingBottom: theme.spacing.xxl }}>
+        <Masthead
+          title={t('app.name')}
+          eyebrowLeft="SUBAH KA AKHBAAR"
+          eyebrowRight="OFFICIAL GAZETTE"
+          subtitle={t('auth.subtitle')}
+          rightAction={<Kabootar size={44} flap />}
+        />
+
         <View
           style={{
-            borderBottomColor: theme.colors.rule,
-            borderBottomWidth: theme.borders.double,
-            paddingBottom: theme.spacing.md,
-            marginBottom: theme.spacing.xl,
+            flexDirection: 'row',
+            gap: theme.spacing.xs,
+            marginBottom: theme.spacing.lg,
           }}
         >
-          <Text
-            style={[typeScale.masthead, { color: theme.colors.ink, fontFamily: fonts.headline }]}
-          >
-            {t('app.name')}
-          </Text>
-          <Text
-            style={[
-              typeScale.caption,
-              { color: theme.colors.muted, fontFamily: fonts.body, marginTop: theme.spacing.xs },
-            ]}
-          >
-            {t('auth.subtitle')}
-          </Text>
+          {[
+            { code: 'en', label: 'English' },
+            { code: 'hi', label: 'हिन्दी' },
+            { code: 'gu', label: 'ગુજરાતી' },
+          ].map((item) => {
+            const active = language === item.code;
+            return (
+              <Pressable
+                key={item.code}
+                accessibilityRole="button"
+                onPress={() => setLanguage(item.code)}
+                style={{
+                  borderWidth: theme.borders.hairline,
+                  borderColor: active ? theme.colors.accent : theme.colors.ruleSubtle,
+                  borderRadius: theme.radii.pill,
+                  backgroundColor: active ? theme.colors.accent : theme.colors.card,
+                  paddingHorizontal: theme.spacing.md,
+                  paddingVertical: 6,
+                }}
+              >
+                <Text
+                  style={[
+                    typeScale.caption,
+                    {
+                      color: active ? theme.colors.onAccent : theme.colors.ink,
+                      fontFamily: fonts.bodyMedium,
+                    },
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
         {!isSupabaseConfigured ? (

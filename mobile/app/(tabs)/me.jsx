@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Masthead, SectionHeader } from '../../src/components/Masthead';
 import { NewspaperButton } from '../../src/components/NewspaperButton';
 import { ScreenShell } from '../../src/components/ScreenShell';
 import { api } from '../../src/lib/api';
@@ -43,7 +44,6 @@ export default function MeScreen() {
     setDigestTime,
   } = useSettingsStore();
   const { session, profile, setProfile, clearSession } = useSessionStore();
-  const [healthText, setHealthText] = useState('');
   const [biometricsSupported, setBiometricsSupported] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
 
@@ -119,16 +119,6 @@ export default function MeScreen() {
     }
   };
 
-  const checkHealth = async () => {
-    setHealthText(t('me.backendChecking'));
-    try {
-      const data = await api.getHealth();
-      setHealthText(t('me.backendOnline', { db: data.db ?? 'ok' }));
-    } catch {
-      setHealthText(t('me.backendOffline'));
-    }
-  };
-
   const handleSignOut = async () => {
     if (supabase) {
       await supabase.auth.signOut();
@@ -137,67 +127,82 @@ export default function MeScreen() {
     router.replace('/(auth)/sign-in');
   };
 
+  const userEmail = session?.user?.email ?? '';
+  const avatarInitial = (profile?.name?.[0] || userEmail?.[0] || 'K').toUpperCase();
+
   return (
     <ScreenShell>
       <ScrollView contentContainerStyle={{ paddingBottom: theme.spacing.xxl }}>
-        <View
-          style={{
-            borderBottomColor: theme.colors.rule,
-            borderBottomWidth: theme.borders.rule,
-            paddingBottom: theme.spacing.sm,
-            marginBottom: theme.spacing.lg,
-          }}
-        >
-          <Text style={[typeScale.title, { color: theme.colors.ink, fontFamily: fonts.headline }]}>
-            {t('me.title')}
-          </Text>
-        </View>
+        <Masthead
+          title={t('me.title')}
+          eyebrowLeft="READER PROFILE"
+          eyebrowRight={(profile?.state || 'ALL INDIA').toUpperCase()}
+        />
 
         {session ? (
           <View
             style={{
               backgroundColor: theme.colors.card,
-              borderColor: theme.colors.rule,
+              borderColor: theme.colors.ruleSubtle,
               borderWidth: theme.borders.hairline,
+              borderLeftWidth: 3,
+              borderLeftColor: theme.colors.accent,
+              borderRadius: theme.radii.md,
               padding: theme.spacing.md,
               marginBottom: theme.spacing.xl,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: theme.spacing.md,
             }}
           >
-            <Text
-              style={[typeScale.caption, { color: theme.colors.muted, fontFamily: fonts.bodyBold }]}
+            <View
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: theme.colors.accent,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              {t('me.account')}
-            </Text>
-            <Text
-              style={[typeScale.body, { color: theme.colors.ink, fontFamily: fonts.bodyMedium }]}
-            >
-              {t('me.signedInAs', { email: session.user?.email ?? '' })}
-            </Text>
-            {profile?.state ? (
               <Text
                 style={[
-                  typeScale.caption,
-                  {
-                    color: theme.colors.muted,
-                    fontFamily: fonts.body,
-                    marginTop: theme.spacing.xs,
-                  },
+                  typeScale.title,
+                  { color: theme.colors.onAccent, fontFamily: fonts.headline },
                 ]}
               >
-                {t('me.stateLabel', { state: profile.state })}
+                {avatarInitial}
               </Text>
-            ) : null}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  color: theme.colors.accent,
+                  fontFamily: fonts.bodyBold,
+                  fontSize: 10,
+                  letterSpacing: 1,
+                }}
+              >
+                {t('me.account').toUpperCase()} · SUBSCRIBER
+              </Text>
+              <Text
+                numberOfLines={1}
+                style={[typeScale.body, { color: theme.colors.ink, fontFamily: fonts.bodyMedium }]}
+              >
+                {userEmail}
+              </Text>
+              {profile?.state ? (
+                <Text
+                  style={[typeScale.caption, { color: theme.colors.muted, fontFamily: fonts.body }]}
+                >
+                  {t('me.stateLabel', { state: profile.state })}
+                </Text>
+              ) : null}
+            </View>
           </View>
         ) : null}
 
-        <Text
-          style={[
-            typeScale.section,
-            { color: theme.colors.ink, fontFamily: fonts.bodyBold, marginBottom: theme.spacing.sm },
-          ]}
-        >
-          {t('me.language')}
-        </Text>
+        <SectionHeader label={t('me.language')} />
         <View style={[styles.row, { gap: theme.spacing.sm, marginBottom: theme.spacing.xl }]}>
           {LANGUAGES.map((item) => {
             const active = language === item.code;
@@ -208,7 +213,8 @@ export default function MeScreen() {
                 onPress={() => handleLanguageChange(item.code)}
                 style={{
                   borderWidth: theme.borders.hairline,
-                  borderColor: active ? theme.colors.accent : theme.colors.rule,
+                  borderColor: active ? theme.colors.accent : theme.colors.ruleSubtle,
+                  borderRadius: theme.radii.pill,
                   backgroundColor: active ? theme.colors.accent : theme.colors.card,
                   paddingHorizontal: theme.spacing.md,
                   paddingVertical: theme.spacing.sm,
@@ -248,7 +254,8 @@ export default function MeScreen() {
                 onPress={() => setThemePreference(item.key)}
                 style={{
                   borderWidth: theme.borders.hairline,
-                  borderColor: active ? theme.colors.accent : theme.colors.rule,
+                  borderColor: active ? theme.colors.accent : theme.colors.ruleSubtle,
+                  borderRadius: theme.radii.pill,
                   backgroundColor: active ? theme.colors.accent : theme.colors.card,
                   paddingHorizontal: theme.spacing.md,
                   paddingVertical: theme.spacing.sm,
@@ -319,7 +326,8 @@ export default function MeScreen() {
             style={{
               backgroundColor: theme.colors.card,
               borderWidth: theme.borders.hairline,
-              borderColor: theme.colors.rule,
+              borderColor: theme.colors.ruleSubtle,
+              borderRadius: theme.radii.md,
               padding: theme.spacing.md,
               gap: theme.spacing.sm,
               marginTop: theme.spacing.sm,
@@ -420,7 +428,8 @@ export default function MeScreen() {
               style={{
                 backgroundColor: theme.colors.card,
                 borderWidth: theme.borders.hairline,
-                borderColor: theme.colors.rule,
+                borderColor: theme.colors.ruleSubtle,
+                borderRadius: theme.radii.md,
                 padding: theme.spacing.md,
                 marginBottom: theme.spacing.xl,
                 flexDirection: 'row',
@@ -498,17 +507,6 @@ export default function MeScreen() {
             label={t('about.title')}
             onPress={() => router.push('/about')}
           />
-          <NewspaperButton variant="secondary" label={t('me.checkBackend')} onPress={checkHealth} />
-          {healthText ? (
-            <Text
-              style={[
-                typeScale.caption,
-                { color: theme.colors.neel, fontFamily: fonts.bodyMedium },
-              ]}
-            >
-              {t('me.backendStatus')}: {healthText}
-            </Text>
-          ) : null}
           {session ? <NewspaperButton label={t('auth.signOut')} onPress={handleSignOut} /> : null}
         </View>
 

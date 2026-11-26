@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { z } from 'zod';
 import { FormField } from '../../src/components/FormField';
+import { Masthead } from '../../src/components/Masthead';
 import { NewspaperButton } from '../../src/components/NewspaperButton';
 import { ScreenShell } from '../../src/components/ScreenShell';
 import { useCountdown } from '../../src/hooks/useCountdown';
@@ -135,8 +136,9 @@ function DeadlineRow({ item, theme, fonts, t, onToggleDone, onAddCalendar, onDel
     <View
       style={{
         backgroundColor: theme.colors.card,
-        borderColor: theme.colors.rule,
+        borderColor: theme.colors.ruleSubtle,
         borderWidth: theme.borders.hairline,
+        borderRadius: theme.radii.md,
         padding: theme.spacing.md,
         marginBottom: theme.spacing.sm,
         gap: theme.spacing.xs,
@@ -319,27 +321,103 @@ export default function DeadlinesScreen() {
     }
   };
 
+  const activeCount = deadlines.filter((d) => d.status === 'active').length;
+  const doneCount = deadlines.filter((d) => d.status === 'done').length;
+  const dueSoonCount = deadlines.filter((d) => {
+    if (d.status !== 'active') return false;
+    const diffDays = (new Date(d.dueAt).getTime() - Date.now()) / 86400000;
+    return diffDays <= 7;
+  }).length;
+
   return (
     <ScreenShell>
+      <Masthead
+        title={t('deadlines.title')}
+        eyebrowLeft="DEADLINE LEDGER"
+        eyebrowRight="T-7 · T-1 · T-0"
+        subtitle={t('deadlines.remindersActive')}
+      />
+
       <View
         style={{
-          borderBottomColor: theme.colors.rule,
-          borderBottomWidth: theme.borders.rule,
-          paddingBottom: theme.spacing.sm,
+          flexDirection: 'row',
+          backgroundColor: theme.colors.card,
+          borderColor: theme.colors.ruleSubtle,
+          borderWidth: theme.borders.hairline,
+          borderRadius: theme.radii.sm,
           marginBottom: theme.spacing.md,
         }}
       >
-        <Text style={[typeScale.title, { color: theme.colors.ink, fontFamily: fonts.headline }]}>
-          {t('deadlines.title')}
-        </Text>
-        <Text style={[typeScale.caption, { color: theme.colors.muted, fontFamily: fonts.body }]}>
-          {t('deadlines.remindersActive')}
-        </Text>
+        <View
+          style={{
+            flex: 1,
+            paddingVertical: theme.spacing.sm,
+            paddingHorizontal: theme.spacing.md,
+            borderRightWidth: theme.borders.hairline,
+            borderRightColor: theme.colors.ruleSubtle,
+          }}
+        >
+          <Text style={{ color: theme.colors.muted, fontFamily: fonts.bodyBold, fontSize: 10 }}>
+            ACTIVE
+          </Text>
+          <Text
+            style={[
+              typeScale.title,
+              typeScale.tabular,
+              { color: theme.colors.ink, fontFamily: fonts.headlineSemi },
+            ]}
+          >
+            {activeCount}
+          </Text>
+        </View>
+        <View
+          style={{
+            flex: 1,
+            paddingVertical: theme.spacing.sm,
+            paddingHorizontal: theme.spacing.md,
+            borderRightWidth: theme.borders.hairline,
+            borderRightColor: theme.colors.ruleSubtle,
+          }}
+        >
+          <Text style={{ color: theme.colors.muted, fontFamily: fonts.bodyBold, fontSize: 10 }}>
+            DUE ≤ 7D
+          </Text>
+          <Text
+            style={[
+              typeScale.title,
+              typeScale.tabular,
+              { color: theme.colors.accent, fontFamily: fonts.headlineSemi },
+            ]}
+          >
+            {dueSoonCount}
+          </Text>
+        </View>
+        <View
+          style={{
+            flex: 1,
+            paddingVertical: theme.spacing.sm,
+            paddingHorizontal: theme.spacing.md,
+          }}
+        >
+          <Text style={{ color: theme.colors.muted, fontFamily: fonts.bodyBold, fontSize: 10 }}>
+            DONE
+          </Text>
+          <Text
+            style={[
+              typeScale.title,
+              typeScale.tabular,
+              { color: theme.colors.neem, fontFamily: fonts.headlineSemi },
+            ]}
+          >
+            {doneCount}
+          </Text>
+        </View>
       </View>
 
       <View style={{ flexDirection: 'row', gap: theme.spacing.xs, marginBottom: theme.spacing.md }}>
         <View style={{ flex: 1 }}>
           <NewspaperButton
+            size="sm"
             variant={viewMode === 'list' ? 'primary' : 'secondary'}
             label={t('deadlines.listView')}
             onPress={() => setViewMode('list')}
@@ -347,6 +425,7 @@ export default function DeadlinesScreen() {
         </View>
         <View style={{ flex: 1 }}>
           <NewspaperButton
+            size="sm"
             variant={viewMode === 'calendar' ? 'primary' : 'secondary'}
             label={t('deadlines.calendarView')}
             onPress={() => setViewMode('calendar')}
@@ -354,6 +433,7 @@ export default function DeadlinesScreen() {
         </View>
         <View style={{ flex: 1 }}>
           <NewspaperButton
+            size="sm"
             variant="secondary"
             label={showAdd ? t('common.skip') : t('deadlines.addTitle')}
             onPress={() => setShowAdd((s) => !s)}

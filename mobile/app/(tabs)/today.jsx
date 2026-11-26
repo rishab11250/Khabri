@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { FlatList, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { Kabootar } from '../../src/components/Kabootar';
 import { KhabarCard } from '../../src/components/KhabarCard';
+import { Masthead } from '../../src/components/Masthead';
 import { NewspaperButton } from '../../src/components/NewspaperButton';
 import { ScreenShell } from '../../src/components/ScreenShell';
 import { api } from '../../src/lib/api';
@@ -44,6 +45,20 @@ export default function TodayScreen() {
     getNextPageParam: (lastPage) => lastPage?.nextCursor ?? undefined,
   });
 
+  const watchesQuery = useQuery({
+    queryKey: ['watches'],
+    queryFn: api.getWatches,
+  });
+
+  const deadlinesQuery = useQuery({
+    queryKey: ['deadlines'],
+    queryFn: api.getDeadlines,
+  });
+
+  const watchCount = watchesQuery.data?.watches?.length ?? 0;
+  const activeDeadlinesCount =
+    deadlinesQuery.data?.deadlines?.filter((d) => d.status === 'active').length ?? 0;
+
   const networkItems = useMemo(
     () => feedQuery.data?.pages.flatMap((p) => p.items || []) ?? [],
     [feedQuery.data?.pages],
@@ -59,42 +74,118 @@ export default function TodayScreen() {
 
   return (
     <ScreenShell>
+      <Masthead
+        title={t('today.masthead')}
+        eyebrowRight="VOL. I · DAILY"
+        subtitle={t('today.dateline', {
+          state: profile?.state || t('onboarding.allIndia'),
+          date: formattedDate,
+        })}
+        rightAction={
+          <NewspaperButton
+            size="sm"
+            variant="secondary"
+            label={t('ask.title')}
+            onPress={() => router.push('/ask')}
+          />
+        }
+      />
+
       <View
         style={{
-          borderBottomColor: theme.colors.rule,
-          borderBottomWidth: theme.borders.double,
-          paddingBottom: theme.spacing.sm,
-          marginBottom: theme.spacing.md,
           flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: theme.spacing.sm,
+          backgroundColor: theme.colors.card,
+          borderColor: theme.colors.ruleSubtle,
+          borderWidth: theme.borders.hairline,
+          borderRadius: theme.radii.sm,
+          marginBottom: theme.spacing.md,
+          overflow: 'hidden',
         }}
       >
-        <View style={{ flex: 1 }}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/(tabs)/watching')}
+          style={{
+            flex: 1,
+            paddingVertical: theme.spacing.sm,
+            paddingHorizontal: theme.spacing.md,
+            borderRightWidth: theme.borders.hairline,
+            borderRightColor: theme.colors.ruleSubtle,
+          }}
+        >
           <Text
-            style={[typeScale.masthead, { color: theme.colors.ink, fontFamily: fonts.headline }]}
+            style={[
+              typeScale.caption,
+              { color: theme.colors.muted, fontFamily: fonts.bodyBold, fontSize: 10 },
+            ]}
           >
-            {t('today.masthead')}
+            {t('tabs.watching').toUpperCase()}
+          </Text>
+          <Text
+            style={[
+              typeScale.title,
+              typeScale.tabular,
+              { color: theme.colors.ink, fontFamily: fonts.headlineSemi },
+            ]}
+          >
+            {watchCount}
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/(tabs)/deadlines')}
+          style={{
+            flex: 1,
+            paddingVertical: theme.spacing.sm,
+            paddingHorizontal: theme.spacing.md,
+            borderRightWidth: theme.borders.hairline,
+            borderRightColor: theme.colors.ruleSubtle,
+          }}
+        >
+          <Text
+            style={[
+              typeScale.caption,
+              { color: theme.colors.muted, fontFamily: fonts.bodyBold, fontSize: 10 },
+            ]}
+          >
+            {t('tabs.deadlines').toUpperCase()}
+          </Text>
+          <Text
+            style={[
+              typeScale.title,
+              typeScale.tabular,
+              { color: theme.colors.accent, fontFamily: fonts.headlineSemi },
+            ]}
+          >
+            {activeDeadlinesCount}
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/circles')}
+          style={{
+            flex: 1,
+            paddingVertical: theme.spacing.sm,
+            paddingHorizontal: theme.spacing.md,
+          }}
+        >
+          <Text
+            style={[
+              typeScale.caption,
+              { color: theme.colors.muted, fontFamily: fonts.bodyBold, fontSize: 10 },
+            ]}
+          >
+            {t('circles.title').toUpperCase()}
           </Text>
           <Text
             style={[
               typeScale.caption,
-              typeScale.tabular,
-              { color: theme.colors.muted, fontFamily: fonts.body, marginTop: theme.spacing.xs },
+              { color: theme.colors.neem, fontFamily: fonts.bodyBold, marginTop: 4 },
             ]}
           >
-            {t('today.dateline', {
-              state: profile?.state || t('onboarding.allIndia'),
-              date: formattedDate,
-            })}
+            {t('common.continue')} →
           </Text>
-        </View>
-        <NewspaperButton
-          variant="secondary"
-          label={t('ask.title')}
-          onPress={() => router.push('/ask')}
-        />
+        </Pressable>
       </View>
 
       <FlatList
@@ -128,10 +219,12 @@ export default function TodayScreen() {
             <View
               style={{
                 backgroundColor: theme.colors.card,
-                borderColor: theme.colors.rule,
+                borderColor: theme.colors.ruleSubtle,
                 borderWidth: theme.borders.hairline,
+                borderRadius: theme.radii.md,
                 padding: theme.spacing.lg,
                 alignItems: 'center',
+                gap: theme.spacing.sm,
               }}
             >
               <Kabootar size={56} flap />
@@ -141,7 +234,7 @@ export default function TodayScreen() {
                   {
                     color: theme.colors.ink,
                     fontFamily: fonts.headlineSemi,
-                    marginTop: theme.spacing.sm,
+                    textAlign: 'center',
                   },
                 ]}
               >
@@ -153,13 +246,19 @@ export default function TodayScreen() {
                   {
                     color: theme.colors.muted,
                     fontFamily: fonts.body,
-                    marginTop: theme.spacing.sm,
                     textAlign: 'center',
                   },
                 ]}
               >
                 {t('today.emptySubtitle')}
               </Text>
+              <View style={{ marginTop: theme.spacing.xs, width: '100%' }}>
+                <NewspaperButton
+                  size="sm"
+                  label={t('tabs.discover')}
+                  onPress={() => router.push('/(tabs)/discover')}
+                />
+              </View>
             </View>
           )
         }

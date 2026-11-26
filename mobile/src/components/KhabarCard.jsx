@@ -77,8 +77,11 @@ export function KhabarCard({ card, onPress, compact = true, overrideWhy }) {
       onPress={onPress}
       style={{
         backgroundColor: theme.colors.card,
-        borderColor: theme.colors.rule,
+        borderColor: theme.colors.ruleSubtle,
         borderWidth: theme.borders.hairline,
+        borderLeftWidth: 3,
+        borderLeftColor: impact.bg,
+        borderRadius: theme.radii.md,
         padding: theme.spacing.lg,
         marginBottom: theme.spacing.md,
       }}

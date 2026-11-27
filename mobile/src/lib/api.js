@@ -30,30 +30,62 @@ export async function apiRequest(path, options = {}) {
     ...options.headers,
   };
 
-  const response = await fetch(`${mobileEnv.apiUrl}${path}`, {
-    method: options.method ?? 'GET',
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
+  const timeoutMs = options.timeoutMs ?? 60000;
+  const maxAttempts = options.retry === false ? 1 : 2;
+  let lastError;
 
-  let payload;
-  try {
-    payload = await response.json();
-  } catch {
-    throw new ApiError('INVALID_RESPONSE', 'Unexpected non-JSON response', response.status);
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(`${mobileEnv.apiUrl}${path}`, {
+        method: options.method ?? 'GET',
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+        signal: controller.signal,
+      });
+
+      let payload;
+      try {
+        payload = await response.json();
+      } catch {
+        throw new ApiError('INVALID_RESPONSE', 'Unexpected non-JSON response', response.status);
+      }
+
+      if (!response.ok || !payload?.success) {
+        const err = payload?.error;
+        throw new ApiError(
+          err?.code ?? 'HTTP_ERROR',
+          err?.message ?? `Request failed (${response.status})`,
+          response.status,
+          err?.details ?? null,
+        );
+      }
+
+      return payload.data;
+    } catch (err) {
+      const msg = String(err?.message || '');
+      const isCancelled =
+        err?.name === 'AbortError' ||
+        msg.toLowerCase().includes('cancelled') ||
+        msg.toLowerCase().includes('aborted');
+      lastError = isCancelled
+        ? new ApiError('TIMEOUT', 'Server took too long to respond. Please try again.', 408)
+        : err;
+
+      const isTransient = isCancelled || !(err instanceof ApiError);
+      if (attempt < maxAttempts && isTransient) {
+        await new Promise((r) => setTimeout(r, 1500));
+        continue;
+      }
+      throw lastError;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
-  if (!response.ok || !payload?.success) {
-    const err = payload?.error;
-    throw new ApiError(
-      err?.code ?? 'HTTP_ERROR',
-      err?.message ?? `Request failed (${response.status})`,
-      response.status,
-      err?.details ?? null,
-    );
-  }
-
-  return payload.data;
+  throw lastError;
 }
 
 export const api = {

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Animated, View } from 'react-native';
-import { useTheme } from '../theme/useTheme';
+import { useTheme } from '@/theme/useTheme';
 
 export function Kabootar({ size = 64, flap = false }) {
   const theme = useTheme();

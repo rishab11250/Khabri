@@ -1,7 +1,7 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { getFontFamilies, typeScale } from '../theme/typography';
-import { useTheme } from '../theme/useTheme';
-import { useSettingsStore } from '../store/settings';
+import { getFontFamilies, typeScale } from '@/theme/typography';
+import { useTheme } from '@/theme/useTheme';
+import { useSettingsStore } from '@/store/settings';
 
 export function FormField({
   label,
@@ -52,9 +52,9 @@ export function FormField({
             fontFamily: fonts.body,
             backgroundColor: theme.colors.card,
             borderColor: error ? theme.colors.accent : theme.colors.ruleSubtle,
-            borderWidth: theme.borders.hairline,
+            borderWidth: error ? theme.borders.double : theme.borders.hairline,
             borderRadius: theme.radii.sm,
-            paddingHorizontal: theme.spacing.md,
+            paddingHorizontal: theme.spacing.lg,
             paddingVertical: theme.spacing.md,
           },
         ]}
@@ -79,6 +79,6 @@ export function FormField({
 
 const styles = StyleSheet.create({
   input: {
-    minHeight: 46,
+    minHeight: 50,
   },
 });

@@ -73,6 +73,7 @@ export default {
         },
       ],
       'expo-notifications',
+      'expo-share-intent',
     ],
     experiments: {
       typedRoutes: false,

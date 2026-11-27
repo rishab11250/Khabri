@@ -1,7 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { useSettingsStore } from '../store/settings';
-import { getFontFamilies, typeScale } from '../theme/typography';
-import { useTheme } from '../theme/useTheme';
+import { useSettingsStore } from '@/store/settings';
+import { getFontFamilies, typeScale } from '@/theme/typography';
+import { useTheme } from '@/theme/useTheme';
 
 export function NewspaperButton({
   label,
@@ -9,17 +10,31 @@ export function NewspaperButton({
   variant = 'primary',
   size = 'md',
   disabled = false,
+  icon,
   accessibilityHint,
 }) {
   const theme = useTheme();
   const language = useSettingsStore((s) => s.language);
   const fonts = getFontFamilies(language);
 
-  const isPrimary = variant === 'primary';
   const isSmall = size === 'sm';
-  const backgroundColor = isPrimary ? theme.colors.accent : theme.colors.card;
-  const textColor = isPrimary ? theme.colors.onAccent : theme.colors.ink;
-  const borderColor = isPrimary ? theme.colors.accent : theme.colors.ruleSubtle;
+  let backgroundColor = theme.colors.accent;
+  let textColor = theme.colors.onAccent;
+  let borderColor = theme.colors.accent;
+
+  if (variant === 'secondary') {
+    backgroundColor = theme.colors.surfaceAlt;
+    textColor = theme.colors.ink;
+    borderColor = theme.colors.ruleSubtle;
+  } else if (variant === 'ink') {
+    backgroundColor = theme.colors.inkSurface;
+    textColor = theme.colors.onInkSurface;
+    borderColor = theme.colors.ruleSubtle;
+  } else if (variant === 'card') {
+    backgroundColor = theme.colors.card;
+    textColor = theme.colors.ink;
+    borderColor = theme.colors.ruleSubtle;
+  }
 
   return (
     <Pressable
@@ -30,18 +45,19 @@ export function NewspaperButton({
       style={({ pressed }) => [
         styles.button,
         {
-          minHeight: isSmall ? 36 : 46,
+          minHeight: isSmall ? 40 : 50,
           borderRadius: theme.radii.sm,
           backgroundColor,
           borderColor,
-          borderWidth: theme.borders.hairline,
+          borderWidth: variant === 'primary' ? 0 : theme.borders.hairline,
           paddingHorizontal: isSmall ? theme.spacing.md : theme.spacing.lg,
           paddingVertical: isSmall ? theme.spacing.xs : theme.spacing.sm,
-          opacity: disabled ? 0.5 : pressed ? 0.85 : 1,
-          transform: [{ scale: pressed && !disabled ? 0.985 : 1 }],
+          opacity: disabled ? 0.45 : pressed ? 0.85 : 1,
+          transform: [{ scale: pressed && !disabled ? 0.975 : 1 }],
         },
       ]}
     >
+      {icon ? <Ionicons name={icon} size={isSmall ? 15 : 18} color={textColor} /> : null}
       <Text
         numberOfLines={1}
         style={[
@@ -61,8 +77,10 @@ export function NewspaperButton({
 
 const styles = StyleSheet.create({
   button: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
   },
   label: {
     textAlign: 'center',

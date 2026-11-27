@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { api } from '../lib/api';
-import { readJsonCache, writeJsonCache } from '../lib/fileCache';
+import { api } from '@/lib/api';
+import { readJsonCache, writeJsonCache } from '@/lib/fileCache';
 
 const QUEUE_FILE = 'offline-queue.json';
 const CHECKLIST_OVERRIDES_FILE = 'checklist-local.json';

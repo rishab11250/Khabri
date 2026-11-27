@@ -1,6 +1,6 @@
 import { useColorScheme } from 'react-native';
 import { getTheme } from './tokens';
-import { useSettingsStore } from '../store/settings';
+import { useSettingsStore } from '@/store/settings';
 
 export function useTheme() {
   const systemScheme = useColorScheme();

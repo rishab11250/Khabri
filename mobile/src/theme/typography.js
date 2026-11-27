@@ -58,10 +58,11 @@ export function getFontFamilies(language) {
 }
 
 export const typeScale = {
-  masthead: { fontSize: 28, lineHeight: 34 },
-  title: { fontSize: 20, lineHeight: 26 },
-  section: { fontSize: 16, lineHeight: 22 },
-  body: { fontSize: 15, lineHeight: 22 },
-  caption: { fontSize: 13, lineHeight: 18 },
+  masthead: { fontSize: 32, lineHeight: 40, letterSpacing: -0.6 },
+  title: { fontSize: 20, lineHeight: 28, letterSpacing: -0.2 },
+  leadTitle: { fontSize: 24, lineHeight: 32, letterSpacing: -0.3 },
+  section: { fontSize: 17, lineHeight: 24 },
+  body: { fontSize: 16, lineHeight: 24 },
+  caption: { fontSize: 13, lineHeight: 19 },
   tabular: { fontVariant: ['tabular-nums'] },
 };

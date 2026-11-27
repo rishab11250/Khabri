@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
-import { useOnline } from '../hooks/useOnline';
-import { getFontFamilies, typeScale } from '../theme/typography';
-import { useTheme } from '../theme/useTheme';
+import { useOnline } from '@/hooks/useOnline';
+import { getFontFamilies, typeScale } from '@/theme/typography';
+import { useTheme } from '@/theme/useTheme';
 
 export function OfflineBanner() {
   const isOnline = useOnline();

@@ -3,7 +3,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
 import { connectDb, disconnectDb } from '../src/config/db.js';
-import { resetDemoNotices } from '../src/demo/demoStore.js';
+import { resetDemoNotices } from '../src/services/demo.service.js';
 import { parseListingHtml } from '../src/engine/fetchers/listing.js';
 import {
   acquireJobLock,

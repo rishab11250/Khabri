@@ -15,8 +15,8 @@ jobs:
           INTERNAL_TICK_SECRET: ${{ secrets.INTERNAL_TICK_SECRET }}
         run: |
           if [ -z "$API_URL" ] || [ -z "$INTERNAL_TICK_SECRET" ]; then
-            echo "API_URL or INTERNAL_TICK_SECRET not configured; skipping tick."
-            exit 0
+            echo "Error: API_URL or INTERNAL_TICK_SECRET not configured."
+            exit 1
           fi
           curl --fail-with-body -sS -X POST \
             -H "x-tick-secret: $INTERNAL_TICK_SECRET" \

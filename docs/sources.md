@@ -1,6 +1,6 @@
 # Verified Catalog Sources
 
-Checked on **2026-11-25** using `User-Agent: KhabriBot/1.0 (+https://khabri.app/bot)`.
+Checked on **2026-11-25** using `User-Agent: KhabriBot/1.0 (+https://github.com/rishab11250/Khabri)`.
 All included sources returned HTTP `200 text/html` and allow root/public notice crawling per `/robots.txt`.
 
 | # | Name | Category | State | Type | URL | `robots.txt` check | Terms / Notes |

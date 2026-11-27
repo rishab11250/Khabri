@@ -21,10 +21,11 @@
 - Verify current official docs before using APIs. No stubs without `[~]` + Decision log. No deprecated APIs.
 
 ## 4. Non-Negotiable Quality Bar
+- **Backend MVC:** `backend/src/` uses layered MVC (`routes/`, `controllers/`, `services/`, `validators/`, `models/`). Route files (`routes/<name>.route.js`, mounted in `routes/index.js`) contain wiring only (~30 lines or fewer) using `createXRouter(requireAuth, options)`; controllers read `req`, call services, return `ok()`, and never import models; services contain business rules + Mongoose queries, take plain args, never import Express or touch `req`/`res`; validators hold zod schemas; `engine/`, `ai/`, `security/`, and `integrations/` are called by services only.
 - **API:** zod validation on every input; `{ success, data, error }` envelope; rate limits; consistent error codes.
 - **Security:** SSRF guard on all user URLs; respect `robots.txt`; prompt-injection delimiters; trust tag set by code, never AI; unofficial disclaimers.
 - **AI:** 1 call per change, zod schema + 1 retry + rules-only fallback; quotas enforced; no live APIs in tests (fixtures/mocks only).
-- **Mobile UI:** colours/spacing from `src/theme/` tokens only (no hex in components); no gradients/drop shadows; all copy via i18n; OS font scaling; >=4.5:1 contrast; offline support per PRD.
+- **Mobile UI:** route files live strictly in `mobile/src/app/` (no non-route files inside `src/app/`); feature UI and hooks belong in `mobile/src/features/<name>/` (no cross-feature imports) and `mobile/src/lib/` stays infrastructure-only; cross-folder imports in `mobile/src/` must use the `@/` path alias configured in `mobile/jsconfig.json` (no `../../` imports; keep `./` only within the same folder); colours/spacing from `src/theme/` tokens only (no hex in components); no gradients/drop shadows; all copy via i18n; OS font scaling; >=4.5:1 contrast; offline support per PRD.
 
 ## 5. Commands (`pnpm`)
 - Backend: `cd backend && pnpm dev | lint | format:check | test`

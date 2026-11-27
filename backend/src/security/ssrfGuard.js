@@ -15,7 +15,8 @@ export const ALLOWED_CONTENT_TYPES = [
 export const DEFAULT_TIMEOUT_MS = 8000;
 export const DEFAULT_MAX_BYTES = 3 * 1024 * 1024;
 export const MAX_REDIRECTS = 3;
-export const BOT_USER_AGENT = 'KhabriBot/1.0 (+https://khabri.app/bot; notice-watcher)';
+export const BOT_USER_AGENT =
+  'KhabriBot/1.0 (+https://github.com/rishab11250/Khabri; rishab11250@gmail.com; notice-watcher)';
 
 export class SsrfError extends Error {
   constructor(code, message) {

@@ -10,7 +10,7 @@
 - **Language:** JavaScript & JSX only (`.js` / `.jsx`) for both `backend/` and `mobile/` (user override of PRD TS).
 - **Mobile:** Expo (current stable SDK), Expo Router, JSX/JS, TanStack Query, Zustand, react-hook-form + zod, i18next (`en`, `hi`, `gu`), Reanimated, `expo-*` modules from PRD §18. Install Expo deps via `npx expo install`.
 - **Backend:** Node 20+, Express (ESM), Mongoose (MongoDB Atlas), zod, Supabase Auth (JWT verified on server) & Storage, `expo-server-sdk`.
-- **Engine & AI:** Direct-first fetch (`cheerio`, `@mozilla/readability`, `jsdom`, `diff`, `pdf-parse`, `rss-parser`, `robots-parser`); SerpAPI budgeted for discovery/pinned search only. AI router: Gemini A (bg), Gemini B (user), Grok fallback; model names from env.
+- **Engine & AI:** Direct-first fetch (`cheerio`, `@mozilla/readability`, `jsdom`, `diff`, `pdf-parse`, `rss-parser`, `robots-parser`); SerpAPI budgeted for discovery/pinned search only. AI router: Gemini A (bg), Gemini B (user), Groq fallback; model names from env.
 - **Scheduler:** `POST /internal/tick` guarded by `x-tick-secret` (GitHub Actions every 15m). `node-cron` dev-only.
 
 ## 3. Workflow

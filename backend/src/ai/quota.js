@@ -34,7 +34,7 @@ export function getMonthPeriod(now = new Date()) {
  * Atomically consumes one quota unit if `used < limit` for `(provider, keyAlias, period)`.
  *
  * @param {object} params - Quota bucket identifiers and cap.
- * @param {string} params.provider - Provider name (`gemini`, `grok`, `serpapi`).
+ * @param {string} params.provider - Provider name (`gemini`, `groq`, `serpapi`).
  * @param {string} params.keyAlias - Key or per-user bucket identifier.
  * @param {string} params.period - Day or month period string.
  * @param {number} params.limit - Maximum units permitted in the period.

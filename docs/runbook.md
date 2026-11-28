@@ -50,7 +50,7 @@ Deploy root `backend/` with build command `pnpm install --frozen-lockfile` and s
 - `SUPABASE_SERVICE_ROLE_KEY` **(optional, highly secret)** — Needed only so `DELETE /v1/me` deletes the Supabase Auth account.
 - `INTERNAL_TICK_SECRET` **(required, min 8 chars, secret)** — Shared secret validated via `x-tick-secret` on `/internal/*`.
 - `GEMINI_API_KEY_1` / `GEMINI_API_KEY_2` / `GEMINI_MODEL` **(optional, secret)** — Primary/secondary Gemini keys and model name.
-- `GROK_API_KEY` / `GROK_MODEL` **(optional, secret)** — Fallback xAI Grok credentials.
+- `GROQ_API_KEY_1` / `GROQ_API_KEY_2` / `GROQ_MODEL` **(optional, secret)** — Fallback Groq credentials.
 - `AI_DAILY_LIMIT_PER_KEY` **(optional)** — Daily call cap per AI key (`0` disables quota tracking).
 - `SERPAPI_KEY_1` / `SERPAPI_KEY_2` / `SERPAPI_MONTHLY_LIMIT_PER_KEY` **(optional, secret)** — Web search fallback keys and monthly cap (switches at 90%, halts at 95%).
 - `EXPO_ACCESS_TOKEN` **(optional, secret)** — Authenticated Expo Push API delivery token.
@@ -77,7 +77,7 @@ Deploy root `backend/` with build command `pnpm install --frozen-lockfile` and s
 - Portals switching to client-side JS shells get flagged `unsupported: true`; users can replace them with search-watch fallback if `SERPAPI_KEY_*` is provisioned.
 
 ### AI / SerpAPI Quota Exhaustion
-- On Gemini `429`, the router triggers a 60-second cooldown and fails over cleanly (`geminiA <-> geminiB -> grok`), falling back to deterministic rule-based summaries (`buildRulesOnlyAnalysis`) when all providers are exhausted or disabled.
+- On Gemini `429`, the router triggers a 60-second cooldown and fails over cleanly (`geminiA <-> geminiB -> groqA <-> groqB`), falling back to deterministic rule-based summaries (`buildRulesOnlyAnalysis`) when all providers are exhausted or disabled.
 - SerpAPI stops search calls at 95% of `SERPAPI_MONTHLY_LIMIT_PER_KEY` (`SearchCache` continues serving cached 6-hour results).
 
 ### Invalid Push Tokens

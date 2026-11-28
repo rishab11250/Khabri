@@ -2,6 +2,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
+import { createAiRouter } from '../src/ai/router.js';
 import { createApp } from '../src/app.js';
 import { connectDb, disconnectDb } from '../src/config/db.js';
 import { parseListingHtml } from '../src/engine/fetchers/listing.js';
@@ -108,6 +109,7 @@ describe('scheduler, circuit breaker, snapshot retention, and tick idempotency',
       await processSource(source, {
         now: new Date(Date.UTC(2026, 10, i)),
         jitterMs: 0,
+        aiRouter: createAiRouter({ adapters: {} }),
         fetchSource: async () => ({
           notModified: false,
           unsupported: false,
@@ -142,6 +144,7 @@ describe('scheduler, circuit breaker, snapshot retention, and tick idempotency',
       tickOptions: {
         jitterMs: 0,
         skipPdf: true,
+        aiRouter: createAiRouter({ adapters: {} }),
         fetchSource: async () => {
           const res = await request(app).get('/demo/board');
           return {

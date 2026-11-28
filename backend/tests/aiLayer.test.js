@@ -2,6 +2,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { analyzeChangeWithRouter } from '../src/ai/analyzeChange.js';
+import { createGroqAdapter } from '../src/ai/groq.js';
 import { wrapUntrustedData } from '../src/ai/prompts.js';
 import { consumeQuota, consumeUserDailyQuota } from '../src/ai/quota.js';
 import { AiUnavailableError, createAiRouter } from '../src/ai/router.js';
@@ -62,7 +63,7 @@ describe('AI router, one-call analysis, cache, quotas, trust, and deadlines', ()
     expect(resolveTrustTag({ url: 'https://randomblog.example.com/post' })).toBe('unverified');
   });
 
-  it('cools down 429 keys, fails over Gemini A -> Gemini B -> Grok, and opens circuit on 3 failures', async () => {
+  it('cools down 429 keys, fails over Gemini A -> Gemini B -> Groq, and opens circuit on 3 failures', async () => {
     const clock = 1_700_000_000_000;
     const rateErr = Object.assign(new Error('429 RESOURCE_EXHAUSTED'), {
       status: 429,
@@ -85,28 +86,28 @@ describe('AI router, one-call analysis, cache, quotas, trust, and deadlines', ()
         throw rateErr;
       }),
     };
-    const grok = {
-      provider: 'grok',
-      keyAlias: 'grok_1',
+    const groqA = {
+      provider: 'groq',
+      keyAlias: 'groq_a',
       isConfigured: () => true,
       generateJson: vi.fn(async () => ({ ok: true })),
     };
 
     const router = createAiRouter({
-      adapters: { geminiA, geminiB, grok },
+      adapters: { geminiA, geminiB, groqA },
       cooldownMs: 30_000,
       nowFn: () => new Date(clock),
       dailyLimitPerKey: 10,
     });
 
     const first = await router.generateJson({ role: 'background', prompt: 'hi' });
-    expect(first.provider).toBe('grok');
+    expect(first.provider).toBe('groq');
     expect(geminiA.generateJson).toHaveBeenCalledTimes(1);
     expect(geminiB.generateJson).toHaveBeenCalledTimes(1);
 
     // Within cooldown: Gemini A & B are skipped without invoking adapters
     const second = await router.generateJson({ role: 'background', prompt: 'hi2' });
-    expect(second.provider).toBe('grok');
+    expect(second.provider).toBe('groq');
     expect(geminiA.generateJson).toHaveBeenCalledTimes(1);
     expect(geminiB.generateJson).toHaveBeenCalledTimes(1);
 
@@ -406,5 +407,31 @@ describe('AI router, one-call analysis, cache, quotas, trust, and deadlines', ()
     deadlines = await Deadline.find({ userId: user._id }).lean();
     expect(deadlines).toHaveLength(1);
     expect(deadlines[0].dueAt.toISOString().slice(0, 10)).toBe('2027-01-05');
+  });
+
+  it('calls Groq OpenAI-compatible chat endpoint in createGroqAdapter', async () => {
+    const httpClient = {
+      post: vi.fn(async () => ({
+        data: { choices: [{ message: { content: '{"summary":"ok"}' } }] },
+      })),
+    };
+    const adapter = createGroqAdapter({
+      apiKey: 'gsk_test',
+      model: 'qwen/qwen3.8-27b',
+      httpClient,
+    });
+    const out = await adapter.generateJson({ prompt: 'hi', systemInstruction: 'sys' });
+    expect(out).toEqual({ summary: 'ok' });
+    expect(adapter.provider).toBe('groq');
+    expect(httpClient.post).toHaveBeenCalledWith(
+      'https://api.groq.com/openai/v1/chat/completions',
+      expect.objectContaining({
+        model: 'qwen/qwen3.8-27b',
+        response_format: { type: 'json_object' },
+      }),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer gsk_test' }),
+      }),
+    );
   });
 });

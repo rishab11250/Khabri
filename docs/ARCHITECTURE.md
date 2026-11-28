@@ -8,7 +8,7 @@ Khabri is a notice-monitoring platform that tracks Indian exam portals, recruitm
 - **Backend API (`backend/`):** Express 5 REST service running on Node 22 with MongoDB (Mongoose), Supabase Auth JWT verification (`jose`), structured Pino logging, and background crawl/digest endpoints triggered via GitHub Actions cron (`tick.yml`).
 - **External Integrations:**
   - **Supabase Auth:** Mobile authentication (`@supabase/supabase-js`) and backend JWKS/HS256 verification + `DELETE /v1/me` user deletion.
-  - **Google Gemini (`@google/genai`) & xAI Grok:** AI summarization, photo circular scanning, Ask Khabri grounded Q&A, and Samjhao translations.
+  - **Google Gemini (`@google/genai`) & Groq:** AI summarization, photo circular scanning, Ask Khabri grounded Q&A, and Samjhao translations.
   - **SerpAPI (`integrations/serpapi.js`):** Search-watch fallback when a site blocks direct fetching or relies on client-side JS rendering (`unsupported: true`).
   - **Expo Push Service (`integrations/expoPush.js`):** Batched push notification delivery and ticket receipt cleanup.
 
@@ -53,8 +53,8 @@ Triggered every 15 minutes by `.github/workflows/tick.yml` (`POST /internal/tick
 ## 5. AI Router & SerpAPI Failover
 
 - **AI Router (`ai/router.js`):** Maintains provider chains ordered by traffic class:
-  - Background ticks: `geminiA -> geminiB -> grok` (`vision`: `geminiA -> geminiB`).
-  - Interactive user requests: `geminiB -> geminiA -> grok` (`vision`: `geminiB -> geminiA`).
+  - Background ticks: `geminiA -> geminiB -> groqA -> groqB` (`vision`: `geminiA -> geminiB`).
+  - Interactive user requests: `geminiB -> geminiA -> groqB -> groqA` (`vision`: `geminiB -> geminiA`).
   - HTTP `429` puts a key into a `60s` cooldown (`cooldownMs`); 3 consecutive non-429 errors open a `5m` circuit (`circuitMs`). Atomic `$inc` counters on `Quota` enforce `AI_DAILY_LIMIT_PER_KEY`.
 - **SerpAPI (`integrations/serpapi.js`):** Caches search results for 6 hours (`SearchCache`), fails over from `SERPAPI_KEY_1` to `SERPAPI_KEY_2` at 90% key-1 usage, and hard-stops at 95% total monthly budget (`SERPAPI_MONTHLY_LIMIT_PER_KEY`).
 

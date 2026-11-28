@@ -1,12 +1,12 @@
 /**
- * Adapts xAI's OpenAI-compatible Grok chat completions endpoint to the AI router interface.
- * Deliberately text/JSON-only (no vision method) so the router excludes Grok from photo intake.
+ * Adapts Groq's OpenAI-compatible chat completions endpoint to the AI router interface.
+ * Deliberately text/JSON-only (no vision method) so the router excludes Groq from photo intake.
  */
 import axios from 'axios';
 
-const XAI_CHAT_URL = 'https://api.x.ai/v1/chat/completions';
+const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-function normalizeGrokError(err) {
+function normalizeGroqError(err) {
   const status = err?.response?.status ?? err?.status;
   if (status === 429) {
     err.status = 429;
@@ -16,18 +16,18 @@ function normalizeGrokError(err) {
 }
 
 /**
- * Builds a Grok chat adapter for JSON and plain-text fallback calls.
+ * Builds a Groq chat adapter for JSON and plain-text fallback calls.
  *
  * @param {object} [options] - API key, model identifier, router alias, and HTTP client override.
- * @param {string} [options.apiKey] - xAI API secret key.
- * @param {string} [options.model] - Grok model identifier.
- * @param {string} [options.keyAlias] - Quota/circuit tracking alias (`grok_1`).
+ * @param {string} [options.apiKey] - Groq API secret key (`gsk_...`).
+ * @param {string} [options.model] - Groq model identifier (e.g. `qwen/qwen3.8-27b`).
+ * @param {string} [options.keyAlias] - Quota/circuit tracking alias (`groq_a` or `groq_b`).
  * @param {object} [options.httpClient] - Axios-compatible HTTP client for testing.
- * @returns {{ provider: string, keyAlias: string, isConfigured: () => boolean, callChat: Function, generateJson: Function, generateText: Function }} Grok adapter.
+ * @returns {{ provider: string, keyAlias: string, isConfigured: () => boolean, callChat: Function, generateJson: Function, generateText: Function }} Groq adapter.
  */
-export function createGrokAdapter({ apiKey, model, keyAlias = 'grok_1', httpClient = axios } = {}) {
+export function createGroqAdapter({ apiKey, model, keyAlias = 'groq_a', httpClient = axios } = {}) {
   return {
-    provider: 'grok',
+    provider: 'groq',
     keyAlias,
     isConfigured: () => Boolean(apiKey),
 
@@ -40,7 +40,7 @@ export function createGrokAdapter({ apiKey, model, keyAlias = 'grok_1', httpClie
 
       try {
         const res = await httpClient.post(
-          XAI_CHAT_URL,
+          GROQ_CHAT_URL,
           {
             model,
             messages,
@@ -57,7 +57,7 @@ export function createGrokAdapter({ apiKey, model, keyAlias = 'grok_1', httpClie
         );
         return res.data?.choices?.[0]?.message?.content || '';
       } catch (err) {
-        throw normalizeGrokError(err);
+        throw normalizeGroqError(err);
       }
     },
 

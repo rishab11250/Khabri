@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 
 const quotaSchema = new mongoose.Schema(
   {
-    provider: { type: String, enum: ['serpapi', 'gemini', 'grok'], required: true },
+    provider: { type: String, enum: ['serpapi', 'gemini', 'groq'], required: true },
     keyAlias: { type: String, required: true }, // API key alias (`gemini_a`) or `user:<id>:<kind>`.
     period: { type: String, required: true }, // `YYYY-MM-DD` (AI/user) or `YYYY-MM` (SerpAPI).
     used: { type: Number, default: 0, min: 0 },

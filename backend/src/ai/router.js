@@ -1,11 +1,11 @@
 /**
- * Routes AI requests across Gemini keys and Grok with per-key rate-limit cooldowns,
+ * Routes AI requests across Gemini keys and Groq with per-key rate-limit cooldowns,
  * circuit breakers, and optional daily quota enforcement.
  * Deliberately isolates background batch traffic (`gemini_a` first) from user-facing
  * requests (`gemini_b` first) so scheduled ticks cannot starve interactive features.
  */
 import { createGeminiAdapter } from './gemini.js';
-import { createGrokAdapter } from './grok.js';
+import { createGroqAdapter } from './groq.js';
 import { consumeQuota, getDayPeriod } from './quota.js';
 
 const DEFAULT_COOLDOWN_MS = 60 * 1000; // Short pause on HTTP 429 before retrying that key.
@@ -18,8 +18,8 @@ const ADAPTER_ORDER_TABLE = {
     user: ['geminiB', 'geminiA'],
   },
   default: {
-    background: ['geminiA', 'geminiB', 'grok'],
-    user: ['geminiB', 'geminiA', 'grok'],
+    background: ['geminiA', 'geminiB', 'groqA', 'groqB'],
+    user: ['geminiB', 'geminiA', 'groqB', 'groqA'],
   },
 };
 
@@ -42,7 +42,7 @@ export class AiUnavailableError extends Error {
 
 // --- Adapter selection and failure tracking ---
 
-function createDefaultAdapters(geminiModel, grokModel) {
+function createDefaultAdapters(geminiModel, groqModel) {
   return {
     geminiA: createGeminiAdapter({
       apiKey: process.env.GEMINI_API_KEY_1,
@@ -54,10 +54,15 @@ function createDefaultAdapters(geminiModel, grokModel) {
       model: geminiModel,
       keyAlias: 'gemini_b',
     }),
-    grok: createGrokAdapter({
-      apiKey: process.env.GROK_API_KEY,
-      model: grokModel,
-      keyAlias: 'grok_1',
+    groqA: createGroqAdapter({
+      apiKey: process.env.GROQ_API_KEY_1,
+      model: groqModel,
+      keyAlias: 'groq_a',
+    }),
+    groqB: createGroqAdapter({
+      apiKey: process.env.GROQ_API_KEY_2,
+      model: groqModel,
+      keyAlias: 'groq_b',
     }),
   };
 }
@@ -127,7 +132,7 @@ function recordAdapterFailure(err, adapter, keyState, nowMs, cooldownMs, circuit
  * @param {number} [options.dailyLimitPerKey] - Daily per-key limit (`0` disables per-key cap).
  * @param {object} [options.adapters] - Optional map of custom provider adapters.
  * @param {string} [options.geminiModel] - Gemini model name override.
- * @param {string} [options.grokModel] - Grok model name override.
+ * @param {string} [options.groqModel] - Groq model name override.
  * @returns {{ getKeyState: Function, generateJson: Function, generateText: Function, vision: Function }} Router API.
  */
 export function createAiRouter(options = {}) {
@@ -140,7 +145,7 @@ export function createAiRouter(options = {}) {
     options.adapters ??
     createDefaultAdapters(
       options.geminiModel ?? process.env.GEMINI_MODEL,
-      options.grokModel ?? process.env.GROK_MODEL,
+      options.groqModel ?? process.env.GROQ_MODEL,
     );
 
   const state = new Map();

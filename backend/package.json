@@ -54,7 +54,7 @@
     "@google/genai": "Gemini AI, Vision & Samjhao",
     "@mozilla/readability": "Article text extraction",
     "@supabase/supabase-js": "Auth account deletion on DELETE /v1/me",
-    "axios": "SSRF-guarded HTTP fetch & Grok/SerpAPI",
+    "axios": "SSRF-guarded HTTP fetch & Groq/SerpAPI",
     "cheerio": "HTML listing parsing & cleanup",
     "cors": "CORS response headers",
     "diff": "Sentence-level change diffing",

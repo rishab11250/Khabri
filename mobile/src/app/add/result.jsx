@@ -1,24 +1,41 @@
+/**
+ * @file Review screen listing AI-proposed portal matches extracted from a scanned notice photo.
+ */
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
+
 import { Masthead } from '@/components/Masthead';
 import { NewspaperButton } from '@/components/NewspaperButton';
 import { ScreenShell } from '@/components/ScreenShell';
 import { PhotoProposalsList } from '@/features/watches/components/PhotoProposalsList';
 import { usePhotoResult } from '@/features/watches/hooks/usePhotoResult';
-import { getFontFamilies } from '@/theme/typography';
-import { useTheme } from '@/theme/useTheme';
+import { useStyles } from '@/theme/useStyles';
 
+const createStyles = (theme) => ({
+  backWrap: {
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.md,
+  },
+  scrollContent: {
+    paddingBottom: theme.spacing.xxl,
+  },
+});
+
+/**
+ * Displays extracted notice entities and lets the user confirm a proposed watch.
+ *
+ * @returns {JSX.Element} Photo scan results screen.
+ */
 export default function AddPhotoResultScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
-  const theme = useTheme();
-  const fonts = getFontFamilies(i18n.language);
+  const styles = useStyles(createStyles);
   const { extracted, proposals, error, isConfirming, confirmProposal } = usePhotoResult();
 
   return (
     <ScreenShell>
-      <View style={{ alignItems: 'flex-start', marginBottom: theme.spacing.md }}>
+      <View style={styles.backWrap}>
         <NewspaperButton
           size="sm"
           variant="card"
@@ -28,17 +45,12 @@ export default function AddPhotoResultScreen() {
         />
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: theme.spacing.xxl }}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <Masthead title={t('add.proposalsTitle')} />
         <PhotoProposalsList
           extracted={extracted}
           proposals={proposals}
           error={error}
-          theme={theme}
-          fonts={fonts}
           t={t}
           isConfirming={isConfirming}
           onConfirm={confirmProposal}

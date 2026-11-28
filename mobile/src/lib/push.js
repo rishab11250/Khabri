@@ -1,43 +1,60 @@
+/**
+ * Configures foreground notification behavior, requests OS push permissions, registers Expo push
+ * tokens with the API, and parses deep-link change IDs from tapped notification payloads.
+ */
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+
 import { api } from './api';
 import { isApiConfigured } from './env';
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
+  handleNotification: () =>
+    Promise.resolve({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
 });
 
+async function ensurePushPermission() {
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('khabri-alerts', {
+      name: 'Khabri Alerts',
+      importance: Notifications.AndroidImportance.HIGH,
+    });
+  }
+
+  const { status: existing } = await Notifications.getPermissionsAsync();
+  if (existing === 'granted') {
+    return true;
+  }
+  const { status } = await Notifications.requestPermissionsAsync();
+  return status === 'granted';
+}
+
+function resolveEasProjectId() {
+  return Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+}
+
+/**
+ * Ensures notification permissions, obtains the Expo push token, and registers the device with the backend.
+ *
+ * @returns {Promise<string|null>} Registered Expo push token or `null` if unavailable/denied.
+ */
 export async function registerForPushNotificationsAsync() {
   if (Platform.OS === 'web' || !isApiConfigured) {
     return null;
   }
 
   try {
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('khabri-alerts', {
-        name: 'Khabri Alerts',
-        importance: Notifications.AndroidImportance.HIGH,
-      });
-    }
-
-    const { status: existing } = await Notifications.getPermissionsAsync();
-    let finalStatus = existing;
-    if (existing !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== 'granted') {
+    if (!(await ensurePushPermission())) {
       return null;
     }
 
-    const projectId =
-      Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+    const projectId = resolveEasProjectId();
     const tokenRes = await Notifications.getExpoPushTokenAsync(
       projectId ? { projectId } : undefined,
     );
@@ -54,6 +71,12 @@ export async function registerForPushNotificationsAsync() {
   }
 }
 
+/**
+ * Extracts a target `changeId` from an Expo notification response's `data` or deep-link URL.
+ *
+ * @param {object|null} response - Notification interaction response object.
+ * @returns {string|null} Change ID string when present, otherwise `null`.
+ */
 export function extractChangeIdFromResponse(response) {
   const data = response?.notification?.request?.content?.data;
   if (data?.changeId) return String(data.changeId);

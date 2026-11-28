@@ -1,11 +1,17 @@
+/**
+ * Defines runtime Zod validation schemas and JSON Schema mirrors for AI change analysis.
+ * Deliberately keeps Zod as the authoritative post-call gate while sending JSON Schema to Gemini.
+ */
 import { z } from 'zod';
 
+// Validates individual deadline candidates returned by rules or LLM output.
 export const extractedDateSchema = z.object({
   label: z.string().trim().min(1).max(80),
   iso: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD date'),
   confidence: z.number().min(0).max(1),
 });
 
+// Validates full AI change-summary payloads before persisting to MongoDB.
 export const changeAnalysisSchema = z.object({
   impact: z.enum(['HIGH', 'MEDIUM', 'LOW']),
   kind: z.string().trim().min(1).max(60),

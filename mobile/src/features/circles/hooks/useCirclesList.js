@@ -1,9 +1,18 @@
+/**
+ * Manages the user's circles list query and new circle creation form state.
+ */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { api } from '@/lib/api';
 
+/**
+ * Screen state hook for listing and creating Circles (`circles/index`).
+ *
+ * @returns {object} Circles list query state, name input state, and `createCircle` handler.
+ */
 export function useCirclesList() {
   const { t } = useTranslation();
   const router = useRouter();

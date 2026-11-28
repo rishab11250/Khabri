@@ -1,9 +1,19 @@
+/**
+ * Manages invite-code input state and the circle join mutation for deep links and manual entry.
+ */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { api } from '@/lib/api';
 
+/**
+ * Screen state hook for joining a Circle by invite code (`circles/join`).
+ *
+ * @param {string|string[]} paramCode - Optional invite code prefilled from deep-link params.
+ * @returns {object} Invite code state and `joinCircle` action.
+ */
 export function useJoinCircle(paramCode) {
   const { t } = useTranslation();
   const router = useRouter();

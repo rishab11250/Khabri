@@ -2,6 +2,7 @@ import { SignJWT } from 'jose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { createApp } from '../src/app.js';
 import { connectDb, disconnectDb } from '../src/config/db.js';
 import { verifySupabaseJwt } from '../src/config/supabase.js';
@@ -199,5 +200,30 @@ describe('Intake (link & photo) and SerpAPI quota guard', () => {
       });
     expect(capped.status).toBe(429);
     expect(capped.body.error.code).toBe('PHOTO_QUOTA_EXCEEDED');
+  });
+
+  it('rejects non-image uploads on /v1/intake/photo without invoking vision AI', async () => {
+    const token = await signTestJwt('supa-bad-mime');
+    const visionMock = vi.fn();
+
+    const app = createApp({
+      tickSecret: TEST_ENV.INTERNAL_TICK_SECRET,
+      verifyJwt: (t) => verifySupabaseJwt(t, TEST_ENV),
+      intakeOptions: {
+        aiRouter: { vision: visionMock },
+      },
+    });
+
+    const badMime = await request(app)
+      .post('/v1/intake/photo')
+      .set('Authorization', `Bearer ${token}`)
+      .attach('photo', Buffer.from('<script>alert(1)</script>', 'utf8'), {
+        filename: 'payload.html',
+        contentType: 'text/html',
+      });
+
+    expect(badMime.status).toBe(400);
+    expect(badMime.body.error.code).toBe('INVALID_IMAGE_TYPE');
+    expect(visionMock).not.toHaveBeenCalled();
   });
 });

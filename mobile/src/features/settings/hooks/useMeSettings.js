@@ -1,11 +1,20 @@
+/**
+ * Synchronizes Me-tab language, theme, digest schedule, and quiet-hours edits with local storage and `/v1/me`.
+ */
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+
 import { api } from '@/lib/api';
 import { isApiConfigured } from '@/lib/env';
 import { supabase } from '@/lib/supabase';
 import { useSessionStore } from '@/store/session';
 import { useSettingsStore } from '@/store/settings';
 
+/**
+ * Settings screen controller hook exposing preferences, profile summary data, nav links, and sign-out.
+ *
+ * @returns {object} Settings values, navigation items, and preference mutation handlers.
+ */
 export function useMeSettings() {
   const { t } = useTranslation();
   const router = useRouter();

@@ -1,6 +1,9 @@
+/**
+ * @file Verified Indian official portal catalog entries and idempotent MongoDB seed helper.
+ */
 import { Source } from '../models/index.js';
 
-export const VERIFIED_CATALOG_SOURCES = [
+const VERIFIED_CATALOG_SOURCES = [
   {
     name: 'SSC Notices',
     url: 'https://ssc.gov.in/',
@@ -153,6 +156,12 @@ export const VERIFIED_CATALOG_SOURCES = [
   },
 ];
 
+/**
+ * Upserts the demo board and curated catalog sources without resetting existing schedules or followers.
+ *
+ * @param {string} [demoBoardUrl='http://localhost:4000/demo/board'] - Demo board URL injected by environment.
+ * @returns {Promise<number>} Number of catalog entries upserted.
+ */
 export async function seedCatalogSources(demoBoardUrl = 'http://localhost:4000/demo/board') {
   const entries = [
     {

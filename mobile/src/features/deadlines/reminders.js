@@ -1,9 +1,55 @@
+/**
+ * Schedules local deadline reminder notifications (7d, 1d, 0d before at 09:00) and
+ * writes events into the device's default calendar when explicitly triggered by the user.
+ */
 import * as Calendar from 'expo-calendar';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 const REMINDER_OFFSETS_DAYS = [7, 1, 0];
 
+async function scheduleSingleDeadline(deadline, now) {
+  if (deadline.status !== 'active') return 0;
+  const due = new Date(deadline.dueAt);
+  if (Number.isNaN(due.getTime())) return 0;
+
+  let scheduled = 0;
+  for (const offsetDays of REMINDER_OFFSETS_DAYS) {
+    const fireAt = new Date(due);
+    fireAt.setDate(fireAt.getDate() - offsetDays);
+    fireAt.setHours(9, 0, 0, 0);
+
+    if (fireAt.getTime() <= now) continue;
+
+    const tag = offsetDays === 0 ? 'Today' : `In ${offsetDays}d`;
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: `${deadline.label} (${tag})`,
+        body: deadline.sourceName
+          ? `${deadline.sourceName} · ${due.toDateString()}`
+          : due.toDateString(),
+        data: {
+          kind: 'deadline-reminder',
+          deadlineId: deadline.id,
+          ...(deadline.changeId ? { changeId: deadline.changeId } : {}),
+        },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: fireAt,
+      },
+    });
+    scheduled += 1;
+  }
+  return scheduled;
+}
+
+/**
+ * Replaces previously scheduled `deadline-reminder` notifications for all active future deadlines.
+ *
+ * @param {Array<object>} [deadlines] - User deadline records.
+ * @returns {Promise<number>} Number of reminder notifications scheduled.
+ */
 export async function syncDeadlineReminders(deadlines = []) {
   if (Platform.OS === 'web') return 0;
 
@@ -20,37 +66,8 @@ export async function syncDeadlineReminders(deadlines = []) {
 
     const now = Date.now();
     let count = 0;
-
     for (const d of deadlines) {
-      if (d.status !== 'active') continue;
-      const due = new Date(d.dueAt);
-      if (Number.isNaN(due.getTime())) continue;
-
-      for (const offsetDays of REMINDER_OFFSETS_DAYS) {
-        const fireAt = new Date(due);
-        fireAt.setDate(fireAt.getDate() - offsetDays);
-        fireAt.setHours(9, 0, 0, 0);
-
-        if (fireAt.getTime() <= now) continue;
-
-        const tag = offsetDays === 0 ? 'Today' : `In ${offsetDays}d`;
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: `${d.label} (${tag})`,
-            body: d.sourceName ? `${d.sourceName} · ${due.toDateString()}` : due.toDateString(),
-            data: {
-              kind: 'deadline-reminder',
-              deadlineId: d.id,
-              ...(d.changeId ? { changeId: d.changeId } : {}),
-            },
-          },
-          trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.DATE,
-            date: fireAt,
-          },
-        });
-        count += 1;
-      }
+      count += await scheduleSingleDeadline(d, now);
     }
 
     return count;
@@ -59,6 +76,13 @@ export async function syncDeadlineReminders(deadlines = []) {
   }
 }
 
+/**
+ * Requests OS calendar permissions and inserts a 1-hour 09:00 event on the user's primary calendar.
+ *
+ * @param {object} deadline - Deadline record (`label`, `dueAt`, `sourceUrl`, `sourceName`).
+ * @returns {Promise<string>} Native calendar event ID string.
+ * @throws {Error} When calendar permission is denied or no writable calendar exists.
+ */
 export async function addDeadlineToDeviceCalendar(deadline) {
   const { status } = await Calendar.requestCalendarPermissionsAsync();
   if (status !== 'granted') {

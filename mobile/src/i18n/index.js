@@ -1,9 +1,13 @@
+/**
+ * @file i18next initialization for English, Hindi, and Gujarati UI translations.
+ */
+import * as Localization from 'expo-localization';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import * as Localization from 'expo-localization';
+
 import en from './en.json';
-import hi from './hi.json';
 import gu from './gu.json';
+import hi from './hi.json';
 
 const SUPPORTED_LANGUAGES = ['en', 'hi', 'gu'];
 

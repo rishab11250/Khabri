@@ -1,10 +1,19 @@
+/**
+ * Manages debounced catalog queries, clipboard URL detection, trending sources, and follow toggles.
+ */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { useDebounce } from '@/hooks/useDebounce';
 import { api } from '@/lib/api';
 
+/**
+ * Screen state hook powering the Discover catalog and trending carousel tab.
+ *
+ * @returns {object} Filters, detected clipboard URL, catalog/trending sources, and follow handlers.
+ */
 export function useDiscover() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();

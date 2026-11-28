@@ -1,5 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+/**
+ * Combines infinite feed queries, file-cached offline feed snapshots, watch/deadline counters,
+ * unread lead-story selection, and batch monitor refresh for the Today tab.
+ */
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+
 import { api } from '@/lib/api';
 import { readJsonCache, writeJsonCache } from '@/lib/fileCache';
 import { useSessionStore } from '@/store/session';
@@ -7,6 +12,11 @@ import { useSettingsStore } from '@/store/settings';
 
 const FEED_CACHE_KEY = 'feed-cache.json';
 
+/**
+ * Screen state hook for the Today feed tab with offline cache hydration and manual monitor sync.
+ *
+ * @returns {object} Feed items, lead card ID, summary counts, and sync handler.
+ */
 export function useTodayFeed() {
   const queryClient = useQueryClient();
   const profile = useSessionStore((s) => s.profile);

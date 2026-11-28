@@ -1,12 +1,23 @@
+/**
+ * Zustand store managing Supabase auth session, cached backend user profile, onboarding draft,
+ * and pending photo scan extraction results.
+ */
 import { create } from 'zustand';
+
 import { readJsonCache, writeJsonCache } from '@/lib/fileCache';
 
 const PROFILE_CACHE_KEY = 'profile-cache.json';
 
-export async function readCachedProfile() {
+/**
+ * Loads the last cached user profile from local storage for instant cold-boot rendering.
+ *
+ * @returns {Promise<object|null>} Cached profile object or `null`.
+ */
+export function readCachedProfile() {
   return readJsonCache(PROFILE_CACHE_KEY, null);
 }
 
+// Holds authentication, user profile, photo proposal transfer state, and onboarding selections.
 export const useSessionStore = create((set) => ({
   hydrated: false,
   session: null,

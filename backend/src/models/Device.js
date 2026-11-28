@@ -1,3 +1,7 @@
+/**
+ * Mongoose model associating Expo push tokens with user accounts.
+ * Deliberately enforces a unique index on `expoPushToken` so shared devices reassign cleanly.
+ */
 import mongoose from 'mongoose';
 
 const deviceSchema = new mongoose.Schema(
@@ -10,6 +14,7 @@ const deviceSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// Fast lookup of all active push tokens per user during notification fan-out.
 deviceSchema.index({ userId: 1 });
 
 export const Device = mongoose.model('Device', deviceSchema);

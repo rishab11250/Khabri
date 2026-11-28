@@ -1,7 +1,16 @@
+/**
+ * Exports active and historical deadlines as an RFC-4180 CSV spreadsheet via native share.
+ */
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Platform } from 'react-native';
 
+/**
+ * Formats `deadlines` to CSV and shares the generated `khabri-deadlines.csv` file on native devices.
+ *
+ * @param {Array<object>} [deadlines] - User deadline records to serialize.
+ * @returns {Promise<string>} CSV string on web or generated file URI on native.
+ */
 export async function exportDeadlinesCsv(deadlines = []) {
   const header = ['Label', 'Due Date (ISO)', 'Status', 'Days Remaining', 'Source'];
   const rows = deadlines.map((d) => {

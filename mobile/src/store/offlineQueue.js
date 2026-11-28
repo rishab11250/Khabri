@@ -1,10 +1,16 @@
+/**
+ * Zustand store buffering optimistic checklist/watch actions while offline and replaying them on reconnect.
+ * Deliberately persists both queued actions and local checklist overrides via `fileCache`.
+ */
 import { create } from 'zustand';
+
 import { api } from '@/lib/api';
 import { readJsonCache, writeJsonCache } from '@/lib/fileCache';
 
 const QUEUE_FILE = 'offline-queue.json';
 const CHECKLIST_OVERRIDES_FILE = 'checklist-local.json';
 
+// Persisted offline action queue and local checklist toggle state.
 export const useOfflineQueueStore = create((set, get) => ({
   queue: [],
   localChecklistDone: {},

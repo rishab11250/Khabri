@@ -1,9 +1,9 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+
 import { createApp } from '../src/app.js';
 import { connectDb, disconnectDb } from '../src/config/db.js';
-import { resetDemoNotices } from '../src/services/demo.service.js';
 import { parseListingHtml } from '../src/engine/fetchers/listing.js';
 import {
   acquireJobLock,
@@ -13,6 +13,7 @@ import {
   selectDueSources,
 } from '../src/engine/scheduler.js';
 import { Change, Deadline, JobLock, Snapshot, Source, User } from '../src/models/index.js';
+import { resetDemoNotices } from '../src/services/demo.service.js';
 
 describe('scheduler, circuit breaker, snapshot retention, and tick idempotency', () => {
   let mongo;

@@ -1,10 +1,19 @@
+/**
+ * Consumes cached photo-scan proposals and subscribes users via catalog, probed link, or search watch.
+ */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { api } from '@/lib/api';
 import { useSessionStore } from '@/store/session';
 
+/**
+ * Screen state hook powering proposal confirmation after scanning a notice photo (`add/result`).
+ *
+ * @returns {object} Extracted fields, watch proposals, confirmation mutation, and error message.
+ */
 export function usePhotoResult() {
   const { t } = useTranslation();
   const router = useRouter();

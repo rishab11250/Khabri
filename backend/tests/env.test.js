@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { parseEnv } from '../src/config/env.js';
 
 describe('env validation', () => {

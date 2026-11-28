@@ -1,19 +1,43 @@
+/**
+ * @file Watch-addition hub letting users pick paste-link intake, photo scan, or catalog browsing.
+ */
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+
 import { Masthead } from '@/components/Masthead';
 import { NewspaperButton } from '@/components/NewspaperButton';
 import { ScreenShell } from '@/components/ScreenShell';
-import { useTheme } from '@/theme/useTheme';
+import { useStyles } from '@/theme/useStyles';
 
+const createStyles = (theme) => ({
+  backWrap: {
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.md,
+  },
+  card: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.ruleSubtle,
+    borderWidth: theme.borders.hairline,
+    borderRadius: theme.radii.lg,
+    padding: theme.spacing.lg,
+    gap: theme.spacing.md,
+  },
+});
+
+/**
+ * Renders the three entry routes for monitoring a new official notice source.
+ *
+ * @returns {JSX.Element} Add-watch hub screen.
+ */
 export default function AddHubScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const theme = useTheme();
+  const styles = useStyles(createStyles);
 
   return (
     <ScreenShell>
-      <View style={{ alignItems: 'flex-start', marginBottom: theme.spacing.md }}>
+      <View style={styles.backWrap}>
         <NewspaperButton
           size="sm"
           variant="card"
@@ -23,16 +47,7 @@ export default function AddHubScreen() {
         />
       </View>
       <Masthead title={t('add.title')} />
-      <View
-        style={{
-          backgroundColor: theme.colors.card,
-          borderColor: theme.colors.ruleSubtle,
-          borderWidth: theme.borders.hairline,
-          borderRadius: theme.radii.lg,
-          padding: theme.spacing.lg,
-          gap: theme.spacing.md,
-        }}
-      >
+      <View style={styles.card}>
         <NewspaperButton
           icon="link-outline"
           label={t('add.pasteLink')}

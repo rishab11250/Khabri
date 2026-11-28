@@ -1,6 +1,10 @@
+/**
+ * @file Grounded conversational Q&A screen ("Ask Khabri") scoped to user's watched portals.
+ */
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Text, View } from 'react-native';
+
 import { Masthead } from '@/components/Masthead';
 import { NewspaperButton } from '@/components/NewspaperButton';
 import { ScreenShell } from '@/components/ScreenShell';
@@ -8,16 +12,48 @@ import { AskComposer } from '@/features/changes/components/AskComposer';
 import { AskMessageBubble } from '@/features/changes/components/AskMessageBubble';
 import { AskScopeFilter } from '@/features/changes/components/AskScopeFilter';
 import { useAskKhabri } from '@/features/changes/hooks/useAskKhabri';
-import { useSettingsStore } from '@/store/settings';
-import { getFontFamilies, typeScale } from '@/theme/typography';
-import { useTheme } from '@/theme/useTheme';
+import { typeScale } from '@/theme/typography';
+import { useStyles } from '@/theme/useStyles';
 
+const createStyles = (theme, fonts) => ({
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  remainingText: {
+    ...typeScale.caption,
+    ...typeScale.tabular,
+    color: theme.colors.muted,
+    fontFamily: fonts.bodyBold,
+  },
+  list: {
+    flex: 1,
+  },
+  emptyCard: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.ruleSubtle,
+    borderWidth: theme.borders.hairline,
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.lg,
+  },
+  emptyText: {
+    ...typeScale.body,
+    color: theme.colors.muted,
+    fontFamily: fonts.body,
+  },
+});
+
+/**
+ * Renders scope filters, chat transcript with clickable citations, remaining quota, and composer.
+ *
+ * @returns {JSX.Element} Ask Khabri screen.
+ */
 export default function AskKhabriScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const theme = useTheme();
-  const language = useSettingsStore((s) => s.language);
-  const fonts = getFontFamilies(language);
+  const styles = useStyles(createStyles);
 
   const {
     scope,
@@ -34,14 +70,7 @@ export default function AskKhabriScreen() {
 
   return (
     <ScreenShell>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: theme.spacing.md,
-        }}
-      >
+      <View style={styles.headerRow}>
         <NewspaperButton
           size="sm"
           variant="card"
@@ -49,15 +78,7 @@ export default function AskKhabriScreen() {
           label={t('common.back')}
           onPress={() => router.back()}
         />
-        <Text
-          style={[
-            typeScale.caption,
-            typeScale.tabular,
-            { color: theme.colors.muted, fontFamily: fonts.bodyBold },
-          ]}
-        >
-          {t('ask.remaining', { count: remaining })}
-        </Text>
+        <Text style={styles.remainingText}>{t('ask.remaining', { count: remaining })}</Text>
       </View>
 
       <Masthead title={t('ask.title')} subtitle={t('ask.subtitle')} />
@@ -67,22 +88,12 @@ export default function AskKhabriScreen() {
       <FlatList
         data={messages}
         keyExtractor={(m) => m.id}
-        style={{ flex: 1 }}
+        style={styles.list}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => <AskMessageBubble item={item} />}
         ListEmptyComponent={
-          <View
-            style={{
-              backgroundColor: theme.colors.card,
-              borderColor: theme.colors.ruleSubtle,
-              borderWidth: theme.borders.hairline,
-              borderRadius: theme.radii.md,
-              padding: theme.spacing.lg,
-            }}
-          >
-            <Text style={[typeScale.body, { color: theme.colors.muted, fontFamily: fonts.body }]}>
-              {t('ask.empty')}
-            </Text>
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyText}>{t('ask.empty')}</Text>
           </View>
         }
       />

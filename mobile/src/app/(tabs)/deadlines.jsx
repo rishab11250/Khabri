@@ -1,5 +1,9 @@
+/**
+ * @file Deadlines tab displaying upcoming portal/user deadlines, calendar view, and CSV export.
+ */
 import { useTranslation } from 'react-i18next';
 import { FlatList, RefreshControl, View } from 'react-native';
+
 import { Masthead } from '@/components/Masthead';
 import { NewspaperButton } from '@/components/NewspaperButton';
 import { ScreenShell } from '@/components/ScreenShell';
@@ -7,13 +11,24 @@ import { DeadlineRow } from '@/features/deadlines/components/DeadlineRow';
 import { DeadlinesEmptyState } from '@/features/deadlines/components/DeadlinesEmptyState';
 import { DeadlinesHeader } from '@/features/deadlines/components/DeadlinesHeader';
 import { useDeadlines } from '@/features/deadlines/hooks/useDeadlines';
-import { getFontFamilies } from '@/theme/typography';
+import { useStyles } from '@/theme/useStyles';
 import { useTheme } from '@/theme/useTheme';
 
+const createStyles = (theme) => ({
+  footer: {
+    height: theme.spacing.xl,
+  },
+});
+
+/**
+ * Renders the Deadlines Ledger list, month grid, and inline deadline creation form.
+ *
+ * @returns {JSX.Element} Deadlines tab screen.
+ */
 export default function DeadlinesScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const theme = useTheme();
-  const fonts = getFontFamilies(i18n.language);
+  const styles = useStyles(createStyles);
   const {
     deadlines,
     isLoading,
@@ -59,8 +74,6 @@ export default function DeadlinesScreen() {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <DeadlinesHeader
-            theme={theme}
-            fonts={fonts}
             t={t}
             activeCount={activeCount}
             dueSoonCount={dueSoonCount}
@@ -88,8 +101,6 @@ export default function DeadlinesScreen() {
         renderItem={({ item }) => (
           <DeadlineRow
             item={item}
-            theme={theme}
-            fonts={fonts}
             t={t}
             onToggleDone={toggleDone}
             onAddCalendar={handleAddCalendar}
@@ -98,15 +109,13 @@ export default function DeadlinesScreen() {
         )}
         ListEmptyComponent={
           <DeadlinesEmptyState
-            theme={theme}
-            fonts={fonts}
             t={t}
             isLoading={isLoading}
             showAdd={showAdd}
             onShowAdd={() => setShowAdd(true)}
           />
         }
-        ListFooterComponent={<View style={{ height: theme.spacing.xl }} />}
+        ListFooterComponent={<View style={styles.footer} />}
       />
     </ScreenShell>
   );

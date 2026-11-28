@@ -2,8 +2,12 @@ name: Scheduled Tick
 
 on:
   schedule:
+    # Poll due government/exam sources every 15 minutes from GitHub Actions.
     - cron: '*/15 * * * *'
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   tick:
@@ -18,6 +22,7 @@ jobs:
             echo "Error: API_URL or INTERNAL_TICK_SECRET not configured."
             exit 1
           fi
+          # Fail workflow step on HTTP 4xx/5xx so persistent backend outages trigger GitHub alerts.
           curl --fail-with-body -sS -X POST \
             -H "x-tick-secret: $INTERNAL_TICK_SECRET" \
             -H "Content-Type: application/json" \

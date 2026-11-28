@@ -1,13 +1,94 @@
+/**
+ * @file Deadlines dashboard header with status counters, view switcher, CSV export, and creation form.
+ */
 import { Controller } from 'react-hook-form';
 import { Text, View } from 'react-native';
+
 import { FormField } from '@/components/FormField';
 import { NewspaperButton } from '@/components/NewspaperButton';
 import { MonthCalendar } from '@/features/deadlines/components/MonthCalendar';
 import { typeScale } from '@/theme/typography';
+import { useStyles } from '@/theme/useStyles';
 
+const createStyles = (theme, fonts) => ({
+  root: {
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.ruleSubtle,
+    borderWidth: theme.borders.hairline,
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.md,
+  },
+  statValue: {
+    ...typeScale.leadTitle,
+    ...typeScale.tabular,
+    fontFamily: fonts.headline,
+  },
+  statInk: {
+    color: theme.colors.ink,
+  },
+  statAccent: {
+    color: theme.colors.accent,
+  },
+  statNeem: {
+    color: theme.colors.neem,
+  },
+  statLabel: {
+    ...typeScale.caption,
+    color: theme.colors.muted,
+    fontFamily: fonts.body,
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
+  },
+  flexOne: {
+    flex: 1,
+  },
+  addCard: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.ruleSubtle,
+    borderWidth: theme.borders.hairline,
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.lg,
+  },
+  errorText: {
+    ...typeScale.caption,
+    color: theme.colors.accent,
+    fontFamily: fonts.bodyMedium,
+  },
+});
+
+/**
+ * Renders summary metric cards, list/calendar toggle, optional add form, and inline month view.
+ *
+ * @param {object} props - Component props.
+ * @param {Function} props.t - Translation helper.
+ * @param {number} props.activeCount - Total pending deadlines.
+ * @param {number} props.dueSoonCount - Pending deadlines due within 7 days.
+ * @param {number} props.doneCount - Completed deadlines count.
+ * @param {'list' | 'calendar'} props.viewMode - Selected presentation mode.
+ * @param {Function} props.onChangeViewMode - Switches between list and calendar views.
+ * @param {boolean} props.showExport - Enables CSV export button when deadlines exist.
+ * @param {Function} props.onExportCsv - Exports all deadlines to CSV and opens share sheet.
+ * @param {boolean} props.showAdd - Controls visibility of the inline add-deadline form.
+ * @param {object} props.control - React Hook Form control instance.
+ * @param {object} props.errors - React Hook Form validation error map.
+ * @param {boolean} props.isCreating - True while creating a deadline.
+ * @param {Function} props.onSubmitAdd - Submit callback for the new deadline form.
+ * @param {string | null} [props.statusError] - Calendar or mutation feedback error.
+ * @param {Array<object>} props.deadlines - Deadlines passed to {@link MonthCalendar}.
+ * @returns {JSX.Element} Deadlines list header view.
+ */
 export function DeadlinesHeader({
-  theme,
-  fonts,
   t,
   activeCount,
   dueSoonCount,
@@ -24,47 +105,27 @@ export function DeadlinesHeader({
   statusError,
   deadlines,
 }) {
+  const styles = useStyles(createStyles);
+
   const stats = [
-    { value: activeCount, label: 'Active', color: theme.colors.ink },
-    { value: dueSoonCount, label: 'Due ≤ 7d', color: theme.colors.accent },
-    { value: doneCount, label: 'Done', color: theme.colors.neem },
+    { value: activeCount, label: 'Active', style: styles.statInk },
+    { value: dueSoonCount, label: 'Due ≤ 7d', style: styles.statAccent },
+    { value: doneCount, label: 'Done', style: styles.statNeem },
   ];
 
   return (
-    <View style={{ gap: theme.spacing.md, marginBottom: theme.spacing.md }}>
-      <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+    <View style={styles.root}>
+      <View style={styles.statsRow}>
         {stats.map((stat) => (
-          <View
-            key={stat.label}
-            style={{
-              flex: 1,
-              backgroundColor: theme.colors.card,
-              borderColor: theme.colors.ruleSubtle,
-              borderWidth: theme.borders.hairline,
-              borderRadius: theme.radii.md,
-              padding: theme.spacing.md,
-            }}
-          >
-            <Text
-              style={[
-                typeScale.leadTitle,
-                typeScale.tabular,
-                { color: stat.color, fontFamily: fonts.headline },
-              ]}
-            >
-              {stat.value}
-            </Text>
-            <Text
-              style={[typeScale.caption, { color: theme.colors.muted, fontFamily: fonts.body }]}
-            >
-              {stat.label}
-            </Text>
+          <View key={stat.label} style={styles.statCard}>
+            <Text style={[styles.statValue, stat.style]}>{stat.value}</Text>
+            <Text style={styles.statLabel}>{stat.label}</Text>
           </View>
         ))}
       </View>
 
-      <View style={{ flexDirection: 'row', gap: theme.spacing.xs }}>
-        <View style={{ flex: 1 }}>
+      <View style={styles.controlsRow}>
+        <View style={styles.flexOne}>
           <NewspaperButton
             size="sm"
             variant={viewMode === 'list' ? 'ink' : 'card'}
@@ -73,7 +134,7 @@ export function DeadlinesHeader({
             onPress={() => onChangeViewMode('list')}
           />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={styles.flexOne}>
           <NewspaperButton
             size="sm"
             variant={viewMode === 'calendar' ? 'ink' : 'card'}
@@ -94,15 +155,7 @@ export function DeadlinesHeader({
       </View>
 
       {showAdd ? (
-        <View
-          style={{
-            backgroundColor: theme.colors.card,
-            borderColor: theme.colors.ruleSubtle,
-            borderWidth: theme.borders.hairline,
-            borderRadius: theme.radii.md,
-            padding: theme.spacing.lg,
-          }}
-        >
+        <View style={styles.addCard}>
           <Controller
             control={control}
             name="label"
@@ -136,17 +189,9 @@ export function DeadlinesHeader({
         </View>
       ) : null}
 
-      {statusError ? (
-        <Text
-          style={[typeScale.caption, { color: theme.colors.accent, fontFamily: fonts.bodyMedium }]}
-        >
-          {statusError}
-        </Text>
-      ) : null}
+      {statusError ? <Text style={styles.errorText}>{statusError}</Text> : null}
 
-      {viewMode === 'calendar' ? (
-        <MonthCalendar deadlines={deadlines} theme={theme} fonts={fonts} />
-      ) : null}
+      {viewMode === 'calendar' ? <MonthCalendar deadlines={deadlines} /> : null}
     </View>
   );
 }

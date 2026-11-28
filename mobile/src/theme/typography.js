@@ -1,3 +1,7 @@
+/**
+ * Registers bundled Google Font faces (Fraunces + Noto Sans + Devanagari + Gujarati) and type scales.
+ * Deliberately maps script-specific font families per active language code cleanly.
+ */
 import { Fraunces_600SemiBold, Fraunces_700Bold } from '@expo-google-fonts/fraunces';
 import {
   NotoSans_400Regular,
@@ -29,6 +33,12 @@ export const fontAssets = {
   NotoSerifGujarati_700Bold,
 };
 
+/**
+ * Returns script-matched font family names (`headline`, `body`, `bodyMedium`, `bodyBold`) for `language`.
+ *
+ * @param {'en'|'hi'|'gu'} language - Active UI language code.
+ * @returns {{ headline: string, headlineSemi: string, body: string, bodyMedium: string, bodyBold: string }} Font family map.
+ */
 export function getFontFamilies(language) {
   if (language === 'hi') {
     return {

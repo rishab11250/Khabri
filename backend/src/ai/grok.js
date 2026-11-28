@@ -1,3 +1,7 @@
+/**
+ * Adapts xAI's OpenAI-compatible Grok chat completions endpoint to the AI router interface.
+ * Deliberately text/JSON-only (no vision method) so the router excludes Grok from photo intake.
+ */
 import axios from 'axios';
 
 const XAI_CHAT_URL = 'https://api.x.ai/v1/chat/completions';
@@ -11,6 +15,16 @@ function normalizeGrokError(err) {
   return err;
 }
 
+/**
+ * Builds a Grok chat adapter for JSON and plain-text fallback calls.
+ *
+ * @param {object} [options] - API key, model identifier, router alias, and HTTP client override.
+ * @param {string} [options.apiKey] - xAI API secret key.
+ * @param {string} [options.model] - Grok model identifier.
+ * @param {string} [options.keyAlias] - Quota/circuit tracking alias (`grok_1`).
+ * @param {object} [options.httpClient] - Axios-compatible HTTP client for testing.
+ * @returns {{ provider: string, keyAlias: string, isConfigured: () => boolean, callChat: Function, generateJson: Function, generateText: Function }} Grok adapter.
+ */
 export function createGrokAdapter({ apiKey, model, keyAlias = 'grok_1', httpClient = axios } = {}) {
   return {
     provider: 'grok',
@@ -52,7 +66,7 @@ export function createGrokAdapter({ apiKey, model, keyAlias = 'grok_1', httpClie
       return JSON.parse(text || '{}');
     },
 
-    async generateText({ prompt, systemInstruction }) {
+    generateText({ prompt, systemInstruction }) {
       return this.callChat({ prompt, systemInstruction, jsonMode: false });
     },
   };

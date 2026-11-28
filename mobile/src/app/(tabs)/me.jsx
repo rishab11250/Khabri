@@ -1,6 +1,10 @@
+/**
+ * @file Account and settings tab managing language, theme, digest schedule, quiet hours, and sign-out.
+ */
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, Text, View } from 'react-native';
+
 import { Masthead, SectionHeader } from '@/components/Masthead';
 import { NewspaperButton } from '@/components/NewspaperButton';
 import { ScreenShell } from '@/components/ScreenShell';
@@ -10,14 +14,34 @@ import { SegmentedOptionBar } from '@/features/settings/components/SegmentedOpti
 import { SettingsNavList } from '@/features/settings/components/SettingsNavList';
 import { SETTINGS_LANGUAGES } from '@/features/settings/constants';
 import { useMeSettings } from '@/features/settings/hooks/useMeSettings';
-import { getFontFamilies, typeScale } from '@/theme/typography';
+import { typeScale } from '@/theme/typography';
+import { useStyles } from '@/theme/useStyles';
 import { useTheme } from '@/theme/useTheme';
 
+const createStyles = (theme, fonts) => ({
+  scrollContent: {
+    paddingBottom: theme.spacing.xxl,
+  },
+  signOutWrap: {
+    marginBottom: theme.spacing.lg,
+  },
+  disclaimer: {
+    ...typeScale.caption,
+    color: theme.colors.muted,
+    fontFamily: fonts.body,
+  },
+});
+
+/**
+ * Renders profile summary, preferences controls, sub-navigation links, and sign-out button.
+ *
+ * @returns {JSX.Element} Account settings tab screen.
+ */
 export default function MeScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
   const theme = useTheme();
-  const fonts = getFontFamilies(i18n.language);
+  const styles = useStyles(createStyles);
   const {
     session,
     profile,
@@ -41,17 +65,12 @@ export default function MeScreen() {
     <ScreenShell>
       <Masthead title={t('me.title')} />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: theme.spacing.xxl }}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {session ? (
           <ProfileSummaryCard
             profile={profile}
             userEmail={userEmail}
             avatarInitial={avatarInitial}
-            theme={theme}
-            fonts={fonts}
             t={t}
           />
         ) : null}
@@ -61,8 +80,6 @@ export default function MeScreen() {
           options={SETTINGS_LANGUAGES.map((item) => ({ key: item.code, label: item.label }))}
           value={language}
           onSelect={handleLanguageChange}
-          theme={theme}
-          fonts={fonts}
           marginBottom={theme.spacing.xl}
         />
 
@@ -71,14 +88,10 @@ export default function MeScreen() {
           options={themeOptions}
           value={themePreference}
           onSelect={setThemePreference}
-          theme={theme}
-          fonts={fonts}
           marginBottom={theme.spacing.xl}
         />
 
         <DigestSettingsSection
-          theme={theme}
-          fonts={fonts}
           t={t}
           digestTime={digestTime}
           quietHours={quietHours}
@@ -87,15 +100,10 @@ export default function MeScreen() {
           onToggleBypassUrgent={handleToggleBypassUrgent}
         />
 
-        <SettingsNavList
-          items={navItems}
-          theme={theme}
-          fonts={fonts}
-          onNavigate={(route) => router.push(route)}
-        />
+        <SettingsNavList items={navItems} onNavigate={(route) => router.push(route)} />
 
         {session ? (
-          <View style={{ marginBottom: theme.spacing.lg }}>
+          <View style={styles.signOutWrap}>
             <NewspaperButton
               icon="log-out-outline"
               label={t('auth.signOut')}
@@ -104,9 +112,7 @@ export default function MeScreen() {
           </View>
         ) : null}
 
-        <Text style={[typeScale.caption, { color: theme.colors.muted, fontFamily: fonts.body }]}>
-          {t('app.unofficialDisclaimer')}
-        </Text>
+        <Text style={styles.disclaimer}>{t('app.unofficialDisclaimer')}</Text>
       </ScrollView>
     </ScreenShell>
   );

@@ -1,3 +1,7 @@
+/**
+ * Formats user profiles, updates user preferences, and cascades full account deletion.
+ * Deliberately decrements `Source.followerCount` and strips circle memberships before deleting the user.
+ */
 import { deleteSupabaseUser } from '../config/supabase.js';
 import {
   ChecklistItem,
@@ -10,6 +14,21 @@ import {
   Watch,
 } from '../models/index.js';
 
+function formatQuietHours(quietHours) {
+  return {
+    enabled: quietHours?.enabled ?? true,
+    start: quietHours?.start ?? '22:00',
+    end: quietHours?.end ?? '07:00',
+    bypassHighUrgent: quietHours?.bypassHighUrgent ?? false,
+  };
+}
+
+/**
+ * Serializes a Mongoose `User` record into the API response shape with safe defaults.
+ *
+ * @param {object} user - Hydrated or lean `User` document.
+ * @returns {object} Public user profile object.
+ */
 export function formatUser(user) {
   return {
     id: String(user._id),
@@ -19,18 +38,20 @@ export function formatUser(user) {
     language: user.language,
     state: user.state,
     interests: user.interests ?? [],
-    quietHours: {
-      enabled: user.quietHours?.enabled ?? true,
-      start: user.quietHours?.start ?? '22:00',
-      end: user.quietHours?.end ?? '07:00',
-      bypassHighUrgent: user.quietHours?.bypassHighUrgent ?? false,
-    },
+    quietHours: formatQuietHours(user.quietHours),
     digestTime: user.digestTime ?? '08:00',
     onboardingComplete: Boolean(user.onboardingComplete),
     createdAt: user.createdAt,
   };
 }
 
+/**
+ * Applies partial profile, onboarding, language, digest, and quiet-hours updates for `userId`.
+ *
+ * @param {string|object} userId - Authenticated user ID.
+ * @param {object} patch - Validated profile update fields.
+ * @returns {Promise<object>} Updated formatted user profile.
+ */
 export async function updateUserProfile(userId, patch) {
   const update = {};
 
@@ -58,6 +79,14 @@ export async function updateUserProfile(userId, patch) {
   return formatUser(updated);
 }
 
+/**
+ * Permanently deletes a user's MongoDB data, decrements followed source counts, and deletes Supabase auth user.
+ *
+ * @param {string|object} userId - Mongo user ID to purge.
+ * @param {string} supabaseId - Linked Supabase Auth UUID.
+ * @param {Function} [deleteAuthUser] - Auth admin delete callback (`deleteSupabaseUser` by default).
+ * @returns {Promise<{ deleted: true, supabaseDeleted: boolean }>} Deletion confirmation.
+ */
 export async function deleteUserAccount(userId, supabaseId, deleteAuthUser = deleteSupabaseUser) {
   const watches = await Watch.find({ userId }).select('sourceId').lean();
   const sourceIds = watches.map((w) => w.sourceId);

@@ -1,11 +1,22 @@
+/**
+ * Manages single circle queries, invite clipboard/share helpers, contact suggestions,
+ * shared watch additions, and member removal mutations.
+ */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import * as Contacts from 'expo-contacts';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Share } from 'react-native';
+
 import { api } from '@/lib/api';
 
+/**
+ * Screen state hook for Circle detail view (`circles/[id]`).
+ *
+ * @param {string|string[]} id - Route parameter identifying the circle.
+ * @returns {object} Circle details, user watches, invite actions, and mutation handlers.
+ */
 export function useCircleDetail(id) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();

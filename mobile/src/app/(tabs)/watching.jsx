@@ -1,20 +1,42 @@
+/**
+ * @file Watching tab displaying user's tracked portals (15-watch cap) and alert controls.
+ */
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
+
 import { Masthead } from '@/components/Masthead';
 import { NewspaperButton } from '@/components/NewspaperButton';
 import { ScreenShell } from '@/components/ScreenShell';
 import { WatchCard } from '@/features/watches/components/WatchCard';
 import { WatchesEmptyState } from '@/features/watches/components/WatchesEmptyState';
 import { useWatches } from '@/features/watches/hooks/useWatches';
-import { getFontFamilies, typeScale } from '@/theme/typography';
+import { typeScale } from '@/theme/typography';
+import { useStyles } from '@/theme/useStyles';
 import { useTheme } from '@/theme/useTheme';
 
+const createStyles = (theme, fonts) => ({
+  errorText: {
+    ...typeScale.caption,
+    color: theme.colors.accent,
+    fontFamily: fonts.bodyMedium,
+    marginBottom: theme.spacing.sm,
+  },
+  footer: {
+    height: theme.spacing.xl,
+  },
+});
+
+/**
+ * Renders the list of followed sources with mute, priority, manual refresh, and unfollow actions.
+ *
+ * @returns {JSX.Element} Watching tab screen.
+ */
 export default function WatchingScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
   const theme = useTheme();
-  const fonts = getFontFamilies(i18n.language);
+  const styles = useStyles(createStyles);
   const {
     watches,
     isLoading,
@@ -43,20 +65,7 @@ export default function WatchingScreen() {
         }
       />
 
-      {actionError ? (
-        <Text
-          style={[
-            typeScale.caption,
-            {
-              color: theme.colors.accent,
-              fontFamily: fonts.bodyMedium,
-              marginBottom: theme.spacing.sm,
-            },
-          ]}
-        >
-          {actionError}
-        </Text>
-      ) : null}
+      {actionError ? <Text style={styles.errorText}>{actionError}</Text> : null}
 
       <FlatList
         data={watches}
@@ -72,8 +81,6 @@ export default function WatchingScreen() {
         renderItem={({ item }) => (
           <WatchCard
             item={item}
-            theme={theme}
-            fonts={fonts}
             t={t}
             onToggleMute={toggleMute}
             onTogglePriority={togglePriority}
@@ -83,14 +90,12 @@ export default function WatchingScreen() {
         )}
         ListEmptyComponent={
           <WatchesEmptyState
-            theme={theme}
-            fonts={fonts}
             t={t}
             isLoading={isLoading}
             onBrowseDiscover={() => router.push('/(tabs)/discover')}
           />
         }
-        ListFooterComponent={<View style={{ height: theme.spacing.xl }} />}
+        ListFooterComponent={<View style={styles.footer} />}
       />
     </ScreenShell>
   );

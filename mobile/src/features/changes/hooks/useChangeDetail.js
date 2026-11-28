@@ -1,12 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
+/**
+ * Loads a change card, tracks read state, toggles offline-queued checklists, runs Samjhao
+ * translations, saves detected deadlines, and triggers PNG/PDF exports.
+ */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import { exportChangePdf } from '@/features/changes/exportChangePdf';
+import { shareKhabarCardImage } from '@/features/changes/shareCard';
 import { api } from '@/lib/api';
 import { useOfflineQueueStore } from '@/store/offlineQueue';
 import { useSettingsStore } from '@/store/settings';
-import { exportChangePdf } from '@/features/changes/exportChangePdf';
-import { shareKhabarCardImage } from '@/features/changes/shareCard';
 
+/**
+ * Screen state hook orchestrating change card viewing, translation, checklist toggles, mute, and sharing.
+ *
+ * @param {string|string[]} id - Route parameter identifying the change card.
+ * @returns {object} Change detail query state, derived display fields, and action handlers.
+ */
 export function useChangeDetail(id) {
   const { t } = useTranslation();
   const markChangeRead = useSettingsStore((s) => s.markChangeRead);

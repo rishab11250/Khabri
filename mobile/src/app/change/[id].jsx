@@ -1,24 +1,79 @@
+/**
+ * @file Change detail screen with Samjhao translation selector, checklist toggles, deadline save, share card capture, and PDF export.
+ */
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, Text, View } from 'react-native';
 import ViewShot from 'react-native-view-shot';
+
 import { NewspaperButton } from '@/components/NewspaperButton';
 import { ScreenShell } from '@/components/ScreenShell';
 import { ActionChecklist } from '@/features/changes/components/ActionChecklist';
 import { KhabarCard } from '@/features/changes/components/KhabarCard';
 import { SamjhaoSelector } from '@/features/changes/components/SamjhaoSelector';
 import { useChangeDetail } from '@/features/changes/hooks/useChangeDetail';
-import { useSettingsStore } from '@/store/settings';
-import { getFontFamilies, typeScale } from '@/theme/typography';
-import { useTheme } from '@/theme/useTheme';
+import { typeScale } from '@/theme/typography';
+import { useStyles } from '@/theme/useStyles';
 
+const createStyles = (theme, fonts) => ({
+  backWrap: {
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.md,
+  },
+  loadingText: {
+    ...typeScale.body,
+    color: theme.colors.muted,
+    fontFamily: fonts.body,
+  },
+  errorBox: {
+    gap: theme.spacing.md,
+  },
+  errorText: {
+    ...typeScale.body,
+    color: theme.colors.accent,
+    fontFamily: fonts.bodyMedium,
+  },
+  scrollContent: {
+    paddingBottom: theme.spacing.xxl,
+  },
+  actionErrorText: {
+    ...typeScale.caption,
+    color: theme.colors.accent,
+    fontFamily: fonts.bodyMedium,
+    marginBottom: theme.spacing.sm,
+  },
+  shotBackground: {
+    backgroundColor: theme.colors.background,
+  },
+  shareRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+  shareCol: {
+    flex: 1,
+  },
+  datesWrap: {
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.md,
+  },
+  savedMsg: {
+    ...typeScale.caption,
+    color: theme.colors.neem,
+    fontFamily: fonts.bodyMedium,
+  },
+});
+
+/**
+ * Renders full Khabar Card details, checklist items, language translation switcher, and export actions.
+ *
+ * @returns {JSX.Element} Change detail screen.
+ */
 export default function ChangeDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { t } = useTranslation();
-  const theme = useTheme();
-  const language = useSettingsStore((s) => s.language);
-  const fonts = getFontFamilies(language);
+  const styles = useStyles(createStyles);
 
   const {
     shotRef,
@@ -44,7 +99,7 @@ export default function ChangeDetailScreen() {
 
   return (
     <ScreenShell>
-      <View style={{ alignItems: 'flex-start', marginBottom: theme.spacing.md }}>
+      <View style={styles.backWrap}>
         <NewspaperButton
           size="sm"
           variant="card"
@@ -55,14 +110,10 @@ export default function ChangeDetailScreen() {
       </View>
 
       {changeQuery.isLoading ? (
-        <Text style={[typeScale.body, { color: theme.colors.muted, fontFamily: fonts.body }]}>
-          {t('common.loading')}
-        </Text>
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
       ) : changeQuery.isError || !card ? (
-        <View style={{ gap: theme.spacing.md }}>
-          <Text
-            style={[typeScale.body, { color: theme.colors.accent, fontFamily: fonts.bodyMedium }]}
-          >
+        <View style={styles.errorBox}>
+          <Text style={styles.errorText}>
             {changeQuery.error?.message || t('common.errorGeneric')}
           </Text>
           <NewspaperButton label={t('common.retry')} onPress={() => changeQuery.refetch()} />
@@ -70,7 +121,7 @@ export default function ChangeDetailScreen() {
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: theme.spacing.xxl }}
+          contentContainerStyle={styles.scrollContent}
         >
           <SamjhaoSelector
             explainLang={explainLang}
@@ -78,38 +129,23 @@ export default function ChangeDetailScreen() {
             onSelect={selectExplainLang}
           />
 
-          {actionError ? (
-            <Text
-              style={[
-                typeScale.caption,
-                {
-                  color: theme.colors.accent,
-                  fontFamily: fonts.bodyMedium,
-                  marginBottom: theme.spacing.sm,
-                },
-              ]}
-            >
-              {actionError}
-            </Text>
-          ) : null}
+          {actionError ? <Text style={styles.actionErrorText}>{actionError}</Text> : null}
 
           <ViewShot ref={shotRef} options={{ format: 'png', quality: 0.95 }}>
-            <View style={{ backgroundColor: theme.colors.background }}>
+            <View style={styles.shotBackground}>
               <KhabarCard card={card} compact={false} overrideWhy={activeTranslation?.why} />
             </View>
           </ViewShot>
 
-          <View
-            style={{ flexDirection: 'row', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}
-          >
-            <View style={{ flex: 1 }}>
+          <View style={styles.shareRow}>
+            <View style={styles.shareCol}>
               <NewspaperButton
                 icon="share-social-outline"
                 label={t('card.shareCard')}
                 onPress={handleShare}
               />
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={styles.shareCol}>
               <NewspaperButton
                 variant="card"
                 icon="document-text-outline"
@@ -126,7 +162,7 @@ export default function ChangeDetailScreen() {
           />
 
           {card.analysis?.dates?.length > 0 ? (
-            <View style={{ gap: theme.spacing.xs, marginBottom: theme.spacing.md }}>
+            <View style={styles.datesWrap}>
               {card.analysis.dates.map((d, idx) => (
                 <NewspaperButton
                   key={idx}
@@ -137,16 +173,7 @@ export default function ChangeDetailScreen() {
                   onPress={() => saveDeadline(d)}
                 />
               ))}
-              {savedDeadlineMsg ? (
-                <Text
-                  style={[
-                    typeScale.caption,
-                    { color: theme.colors.neem, fontFamily: fonts.bodyMedium },
-                  ]}
-                >
-                  {savedDeadlineMsg}
-                </Text>
-              ) : null}
+              {savedDeadlineMsg ? <Text style={styles.savedMsg}>{savedDeadlineMsg}</Text> : null}
             </View>
           ) : null}
 

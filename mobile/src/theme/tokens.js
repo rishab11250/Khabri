@@ -1,3 +1,7 @@
+/**
+ * Defines Khabri's semantic color palettes (light/dark) and design system spacing, radii, and borders.
+ * Deliberately centralizes every hex code here so UI components consume theme tokens exclusively.
+ */
 export const lightColors = {
   background: '#F5F6F8',
   card: '#FFFFFF',
@@ -22,7 +26,7 @@ export const lightColors = {
   onNeem: '#FFFFFF',
 };
 
-export const darkColors = {
+const darkColors = {
   background: '#090B0F',
   card: '#11141B',
   surfaceAlt: '#191E28',
@@ -70,6 +74,12 @@ export const borders = {
   double: 2,
 };
 
+/**
+ * Resolves the active design-token theme object for `'light'` or `'dark'` mode.
+ *
+ * @param {'light'|'dark'} colorScheme - Resolved system or user-selected color scheme.
+ * @returns {{ scheme: 'light'|'dark', colors: object, spacing: object, radii: object, borders: object }} Theme token bundle.
+ */
 export function getTheme(colorScheme) {
   return {
     scheme: colorScheme === 'dark' ? 'dark' : 'light',

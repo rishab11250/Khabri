@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { diffListings, diffPages } from '../src/engine/diff.js';
 import { extractSignals } from '../src/engine/extract.js';
 import { evaluateMateriality } from '../src/engine/materialFilter.js';

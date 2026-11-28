@@ -1,17 +1,35 @@
+/**
+ * @file Account registration screen with password-strength validation and language switcher.
+ */
 import { Link } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
+
 import { NewspaperButton } from '@/components/NewspaperButton';
 import { ScreenShell } from '@/components/ScreenShell';
 import { AuthHeader } from '@/features/settings/components/AuthHeader';
 import { SignUpFormCard } from '@/features/settings/components/SignUpFormCard';
 import { useAuthSignUp } from '@/features/settings/hooks/useAuthSignUp';
-import { getFontFamilies } from '@/theme/typography';
-import { useTheme } from '@/theme/useTheme';
+import { useStyles } from '@/theme/useStyles';
 
+const createStyles = (theme) => ({
+  scrollContent: {
+    paddingBottom: theme.spacing.xxl,
+    paddingTop: theme.spacing.md,
+  },
+  switchWrap: {
+    marginTop: theme.spacing.lg,
+  },
+});
+
+/**
+ * Renders the sign-up form and link back to sign-in.
+ *
+ * @returns {JSX.Element} Sign-up screen.
+ */
 export default function SignUpScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
+  const styles = useStyles(createStyles);
   const {
     language,
     setLanguage,
@@ -24,21 +42,11 @@ export default function SignUpScreen() {
     notice,
     submitSignUp,
   } = useAuthSignUp();
-  const fonts = getFontFamilies(language);
 
   return (
     <ScreenShell>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: theme.spacing.xxl, paddingTop: theme.spacing.md }}
-      >
-        <AuthHeader
-          language={language}
-          onSelectLanguage={setLanguage}
-          theme={theme}
-          fonts={fonts}
-          t={t}
-        />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <AuthHeader language={language} onSelectLanguage={setLanguage} t={t} />
 
         <SignUpFormCard
           control={control}
@@ -49,12 +57,10 @@ export default function SignUpScreen() {
           submitError={submitError}
           notice={notice}
           onSubmit={submitSignUp}
-          theme={theme}
-          fonts={fonts}
           t={t}
         />
 
-        <View style={{ marginTop: theme.spacing.lg }}>
+        <View style={styles.switchWrap}>
           <Link href="/(auth)/sign-in" asChild>
             <NewspaperButton label={t('auth.switchToSignIn')} variant="card" />
           </Link>

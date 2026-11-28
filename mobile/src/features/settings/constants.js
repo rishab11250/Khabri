@@ -1,3 +1,7 @@
+/**
+ * @file Language, digest schedule, and interest-icon option constants for settings and onboarding.
+ */
+
 export const SETTINGS_LANGUAGES = [
   { code: 'en', label: 'English' },
   { code: 'hi', label: 'हिन्दी' },

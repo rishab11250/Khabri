@@ -1,5 +1,9 @@
+/**
+ * Validates discriminated `add`, `update`, and `reset` actions for the Demo Notice Board.
+ */
 import { z } from 'zod';
 
+// Body schema for POST /demo/board/mutate.
 export const demoMutationSchema = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('add'),

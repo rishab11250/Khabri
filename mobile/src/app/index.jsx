@@ -1,7 +1,16 @@
+/**
+ * @file Root launch gate routing the user to onboarding, sign-in, or the main tab feed.
+ */
 import { Redirect } from 'expo-router';
+
 import { useSessionStore } from '@/store/session';
 import { useSettingsStore } from '@/store/settings';
 
+/**
+ * Redirects initial app entry once session and settings stores hydrate.
+ *
+ * @returns {JSX.Element | null} Redirect element or `null` while stores hydrate.
+ */
 export default function IndexGate() {
   const hydrated = useSessionStore((s) => s.hydrated);
   const session = useSessionStore((s) => s.session);

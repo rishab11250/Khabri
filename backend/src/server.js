@@ -1,3 +1,7 @@
+/**
+ * Process entrypoint connecting MongoDB, booting the Express HTTP server, and handling SIGINT/SIGTERM.
+ * Deliberately keeps route setup in `app.js` and exposes no HTTP handler exports itself.
+ */
 import { createApp } from './app.js';
 import { connectDb, disconnectDb } from './config/db.js';
 import { getEnv } from './config/env.js';
@@ -16,7 +20,7 @@ async function start() {
     logger.info({ port: env.PORT, nodeEnv: env.NODE_ENV }, 'khabri-api listening');
   });
 
-  const shutdown = async (signal) => {
+  const shutdown = (signal) => {
     logger.info({ signal }, 'Shutting down');
     server.close(async () => {
       await disconnectDb();

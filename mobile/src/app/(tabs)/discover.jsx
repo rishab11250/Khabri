@@ -1,20 +1,35 @@
+/**
+ * @file Discover tab listing verified sources, trending carousels, and link/photo intake CTAs.
+ */
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { FlatList, RefreshControl, View } from 'react-native';
+
 import { Masthead } from '@/components/Masthead';
 import { ScreenShell } from '@/components/ScreenShell';
 import { CatalogSourceRow } from '@/features/watches/components/CatalogSourceRow';
 import { DiscoverToolbar } from '@/features/watches/components/DiscoverToolbar';
 import { TrendingCarousel } from '@/features/watches/components/TrendingCarousel';
 import { useDiscover } from '@/features/watches/hooks/useDiscover';
-import { getFontFamilies } from '@/theme/typography';
+import { useStyles } from '@/theme/useStyles';
 import { useTheme } from '@/theme/useTheme';
 
+const createStyles = (theme) => ({
+  footer: {
+    height: theme.spacing.xl,
+  },
+});
+
+/**
+ * Renders catalog search, category filters, trending portals, and quick watch toggles.
+ *
+ * @returns {JSX.Element} Discover tab screen.
+ */
 export default function DiscoverScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
   const theme = useTheme();
-  const fonts = getFontFamilies(i18n.language);
+  const styles = useStyles(createStyles);
   const {
     search,
     setSearch,
@@ -41,8 +56,6 @@ export default function DiscoverScreen() {
       />
 
       <DiscoverToolbar
-        theme={theme}
-        fonts={fonts}
         t={t}
         clipboardUrl={clipboardUrl}
         onClearClipboard={() => setClipboardUrl('')}
@@ -66,8 +79,6 @@ export default function DiscoverScreen() {
           <TrendingCarousel
             sources={trendingSources}
             watchBySourceId={watchBySourceId}
-            theme={theme}
-            fonts={fonts}
             t={t}
             onToggleFollow={toggleFollow}
           />
@@ -83,14 +94,12 @@ export default function DiscoverScreen() {
           <CatalogSourceRow
             item={item}
             existingWatch={watchBySourceId.get(item.id)}
-            theme={theme}
-            fonts={fonts}
             t={t}
             isToggling={isToggling}
             onToggle={toggleFollow}
           />
         )}
-        ListFooterComponent={<View style={{ height: theme.spacing.xl }} />}
+        ListFooterComponent={<View style={styles.footer} />}
       />
     </ScreenShell>
   );

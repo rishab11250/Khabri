@@ -1,6 +1,17 @@
+/**
+ * Computes and periodically refreshes remaining day counts for application deadlines.
+ * Deliberately ticks hourly because UI granularity is day-level (`ceil(diffMs / day)`).
+ */
 import { useEffect, useState } from 'react';
 
-export function computeCountdown(dueAt, nowMs = Date.now()) {
+/**
+ * Computes calendar-day countdown metrics for a deadline ISO/Date target.
+ *
+ * @param {string|Date} dueAt - Target due date.
+ * @param {number} [nowMs] - Reference epoch milliseconds (defaults to `Date.now()`).
+ * @returns {{ valid: boolean, daysLeft: number, expired: boolean }} Countdown breakdown.
+ */
+function computeCountdown(dueAt, nowMs = Date.now()) {
   const targetMs = new Date(dueAt).getTime();
   if (Number.isNaN(targetMs)) {
     return { valid: false, daysLeft: 0, expired: false };
@@ -11,6 +22,12 @@ export function computeCountdown(dueAt, nowMs = Date.now()) {
   return { valid: true, daysLeft, expired };
 }
 
+/**
+ * React hook returning live day countdown metrics refreshed every hour.
+ *
+ * @param {string|Date} dueAt - Target due date.
+ * @returns {{ valid: boolean, daysLeft: number, expired: boolean }} Live countdown state.
+ */
 export function useCountdown(dueAt) {
   const [nowMs, setNowMs] = useState(() => Date.now());
 

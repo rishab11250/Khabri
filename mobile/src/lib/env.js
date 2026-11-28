@@ -1,3 +1,7 @@
+/**
+ * Reads public build-time Expo environment variables and exposes feature configuration flags.
+ * Deliberately strips trailing slashes on URLs so API path concatenation never double-slashes.
+ */
 export const mobileEnv = {
   apiUrl: (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/$/, ''),
   supabaseUrl: (process.env.EXPO_PUBLIC_SUPABASE_URL ?? '').replace(/\/$/, ''),

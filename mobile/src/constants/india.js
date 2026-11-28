@@ -1,3 +1,7 @@
+/**
+ * @file Indian states/UT list, interest categories, and fuzzy state-name matcher.
+ */
+
 export const INDIAN_STATES = [
   'All India',
   'Andhra Pradesh',
@@ -37,6 +41,12 @@ export const INDIAN_STATES = [
 
 export const INTEREST_CATEGORIES = ['exam', 'recruitment', 'scholarship', 'scheme', 'university'];
 
+/**
+ * Matches a device or user-entered region name against {@link INDIAN_STATES}.
+ *
+ * @param {string | null | undefined} regionName - Candidate region label.
+ * @returns {string | null} Canonical state name, or `null` when unmatched.
+ */
 export function matchIndianState(regionName) {
   if (!regionName) return null;
   const normalised = regionName.trim().toLowerCase();

@@ -1,6 +1,16 @@
+/**
+ * HTTP controller for link probing and uploaded notice photo extraction.
+ * Deliberately zeros out uploaded `req.file.buffer` in a `finally` block right after processing.
+ */
 import { AppError, ok } from '../middleware/envelope.js';
 import { processLinkIntake, processPhotoIntake } from '../services/intake.service.js';
 
+/**
+ * Creates `/v1/intake` link and photo handlers with optional fetch and AI overrides.
+ *
+ * @param {object} [options] - Optional `{ fetchOptions, aiRouter }` overrides for testing.
+ * @returns {{ postLink: Function, postPhoto: Function }} Express handlers.
+ */
 export function createIntakeHandlers(options = {}) {
   return {
     postLink: async (req, res) => {

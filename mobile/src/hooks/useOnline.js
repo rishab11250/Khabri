@@ -1,6 +1,14 @@
-import { useEffect, useState } from 'react';
+/**
+ * Polls device network reachability via `expo-network` for offline banner and queue replay triggers.
+ */
 import * as Network from 'expo-network';
+import { useEffect, useState } from 'react';
 
+/**
+ * Tracks whether the device has an active reachable internet connection (`true` fallback on check failure).
+ *
+ * @returns {boolean} True when connected and reachable.
+ */
 export function useOnline() {
   const [isOnline, setIsOnline] = useState(true);
 

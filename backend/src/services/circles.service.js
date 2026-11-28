@@ -1,5 +1,11 @@
+/**
+ * Manages shared study/family circles, 6-char invite codes, shared watch propagation, and membership rules.
+ * Deliberately caps circles at 30 members and respects each member's 15-watch limit when auto-subscribing.
+ */
 import { randomBytes } from 'node:crypto';
+
 import mongoose from 'mongoose';
+
 import { AppError } from '../middleware/envelope.js';
 import { Circle, Source, User, Watch } from '../models/index.js';
 
@@ -45,11 +51,26 @@ function formatCircleSummary(circle, currentUserId) {
   };
 }
 
+// --- Circle CRUD and invitation flows ---
+
+/**
+ * Lists circles where `userId` is currently a member, ordered newest first.
+ *
+ * @param {string|object} userId - Authenticated user ID.
+ * @returns {Promise<Array<object>>} Summarized circle memberships.
+ */
 export async function listUserCircles(userId) {
   const circles = await Circle.find({ 'members.userId': userId }).sort({ createdAt: -1 }).lean();
   return circles.map((c) => formatCircleSummary(c, userId));
 }
 
+/**
+ * Creates a new circle owned by `userId` with a unique 6-character alphanumeric invite code.
+ *
+ * @param {string|object} userId - Owner user ID.
+ * @param {string} name - Circle display name.
+ * @returns {Promise<object>} Summarized created circle.
+ */
 export async function createCircle(userId, name) {
   let inviteCode = generateInviteCode(6);
   while (await Circle.exists({ inviteCode })) {
@@ -67,6 +88,14 @@ export async function createCircle(userId, name) {
   return formatCircleSummary(circle, userId);
 }
 
+/**
+ * Joins a circle by invite code and subscribes the user to its shared sources (within user cap).
+ *
+ * @param {string|object} userId - Joining user ID.
+ * @param {string} inviteCode - Case-insensitive invite code.
+ * @returns {Promise<object>} Updated circle summary.
+ * @throws {AppError} When the code is unknown (404) or the 30-member limit is full (400).
+ */
 export async function joinCircle(userId, inviteCode) {
   const code = inviteCode.toUpperCase();
   const circle = await Circle.findOne({ inviteCode: code });
@@ -97,6 +126,14 @@ export async function joinCircle(userId, inviteCode) {
   return formatCircleSummary(circle, userId);
 }
 
+/**
+ * Fetches member profiles and shared sources for a circle the user belongs to.
+ *
+ * @param {string|object} userId - Authenticated circle member ID.
+ * @param {string} circleId - Circle ObjectId string.
+ * @returns {Promise<object>} Detailed circle view with `members` and `watches`.
+ * @throws {AppError} On invalid ID (400) or non-member/missing circle (404).
+ */
 export async function getCircleDetail(userId, circleId) {
   if (!mongoose.Types.ObjectId.isValid(circleId)) {
     throw new AppError(400, 'INVALID_ID', 'Invalid circle id');
@@ -145,6 +182,15 @@ export async function getCircleDetail(userId, circleId) {
   };
 }
 
+/**
+ * Shares an existing `Source` onto a circle and fans out subscriptions to all members.
+ *
+ * @param {string|object} userId - Calling circle member ID.
+ * @param {string} circleId - Target circle ObjectId string.
+ * @param {string} sourceId - Target source ObjectId string.
+ * @returns {Promise<{ circle: object, subscribedMembers: number }>} Updated circle and newly subscribed count.
+ * @throws {AppError} When circle ID is invalid (400) or circle/source is missing (404).
+ */
 export async function addWatchToCircle(userId, circleId, sourceId) {
   if (!mongoose.Types.ObjectId.isValid(circleId)) {
     throw new AppError(400, 'INVALID_ID', 'Invalid circle id');
@@ -180,6 +226,15 @@ export async function addWatchToCircle(userId, circleId, sourceId) {
   };
 }
 
+/**
+ * Removes a member from a circle; restricted strictly to the circle owner.
+ *
+ * @param {string|object} userId - Calling owner user ID.
+ * @param {string} circleId - Circle ObjectId string.
+ * @param {string} targetUserId - Member user ID to evict.
+ * @returns {Promise<{ removed: true, memberCount: number }>} Removal confirmation.
+ * @throws {AppError} On invalid ID/owner eviction (400), non-owner caller (403), or missing circle/member (404).
+ */
 export async function removeMemberFromCircle(userId, circleId, targetUserId) {
   if (
     !mongoose.Types.ObjectId.isValid(circleId) ||

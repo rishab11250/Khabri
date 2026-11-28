@@ -1,24 +1,48 @@
+/**
+ * Renders an official notice change card into a printable HTML-to-PDF summary and opens system share.
+ * Deliberately uses light newspaper theme colors so exported PDFs remain crisp on white paper.
+ */
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+
 import { lightColors } from '@/theme/tokens';
 
-export async function exportChangePdf(change, sourceName) {
-  const dates = change?.analysis?.dates || [];
-  const checklist = change?.analysis?.checklist || [];
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
-  const datesHtml = dates.length
-    ? `<div class="box"><h3>Important Dates</h3><ul>${dates
-        .map((d) => `<li><strong>${d.label}:</strong> ${d.iso}</li>`)
-        .join('')}</ul></div>`
+function renderDatesHtml(dates) {
+  if (!dates.length) return '';
+  const items = dates
+    .map((d) => `<li><strong>${escapeHtml(d.label)}:</strong> ${escapeHtml(d.iso)}</li>`)
+    .join('');
+  return `<div class="box"><h3>Important Dates</h3><ul>${items}</ul></div>`;
+}
+
+function renderChecklistHtml(checklist) {
+  if (!checklist.length) return '';
+  const items = checklist.map((c) => `<li>${escapeHtml(c)}</li>`).join('');
+  return `<div class="box"><h3>Action Checklist</h3><ol>${items}</ol></div>`;
+}
+
+function buildPdfHtml(change, sourceName) {
+  const datesHtml = renderDatesHtml(change?.analysis?.dates || []);
+  const checklistHtml = renderChecklistHtml(change?.analysis?.checklist || []);
+  const dateLabel = new Date(change?.detectedAt || Date.now()).toLocaleDateString('en-IN');
+  const impactStamp = `${escapeHtml(change?.impact || 'NOTICE')} • ${escapeHtml(change?.trust || 'OFFICIAL')}`;
+  const headline = escapeHtml(change?.after || 'Official Notice Update');
+  const publisher = escapeHtml(sourceName || 'Official Portal');
+  const whyHtml = change?.analysis?.why
+    ? `<div class="why"><strong>Why it matters:</strong> ${escapeHtml(change.analysis.why)}</div>`
     : '';
+  const noticeId = escapeHtml(change?._id || 'n/a');
 
-  const checklistHtml = checklist.length
-    ? `<div class="box"><h3>Action Checklist</h3><ol>${checklist
-        .map((c) => `<li>${c}</li>`)
-        .join('')}</ol></div>`
-    : '';
-
-  const html = `
+  return `
     <!DOCTYPE html>
     <html>
       <head>
@@ -37,22 +61,32 @@ export async function exportChangePdf(change, sourceName) {
       <body>
         <div class="masthead">
           <div style="font-size: 12px; font-weight: bold; letter-spacing: 1px;">KHABRI — OFFICIAL NOTICE REPORT</div>
-          <div style="font-size: 11px; color: ${lightColors.muted};">${new Date(change.detectedAt || Date.now()).toLocaleDateString('en-IN')}</div>
+          <div style="font-size: 11px; color: ${lightColors.muted};">${escapeHtml(dateLabel)}</div>
         </div>
-        <div class="stamp">${change.impact || 'NOTICE'} • ${change.trust || 'OFFICIAL'}</div>
-        <h1>${change.after || 'Official Notice Update'}</h1>
-        <div class="source">Source: ${sourceName || 'Official Portal'}</div>
-        ${change.analysis?.why ? `<div class="why"><strong>Why it matters:</strong> ${change.analysis.why}</div>` : ''}
+        <div class="stamp">${impactStamp}</div>
+        <h1>${headline}</h1>
+        <div class="source">Source: ${publisher}</div>
+        ${whyHtml}
         ${datesHtml}
         ${checklistHtml}
         <div class="footer">
-          Notice ID: ${change._id || 'n/a'}<br />
+          Notice ID: ${noticeId}<br />
           Disclaimer: Khabri is an independent notification tool. Always cross-check with original portal.
         </div>
       </body>
     </html>
   `;
+}
 
+/**
+ * Generates a PDF file summarizing `change` and invokes the native share dialog when available.
+ *
+ * @param {object} change - Full change card record including `analysis.dates` and `checklist`.
+ * @param {string} [sourceName] - Human-readable publisher/portal title.
+ * @returns {Promise<string>} Temporary file URI produced by `expo-print`.
+ */
+export async function exportChangePdf(change, sourceName) {
+  const html = buildPdfHtml(change, sourceName);
   const { uri } = await Print.printToFileAsync({ html });
   if (await Sharing.isAvailableAsync()) {
     await Sharing.shareAsync(uri, {

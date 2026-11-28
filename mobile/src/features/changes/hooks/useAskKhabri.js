@@ -1,8 +1,17 @@
-import { useState } from 'react';
+/**
+ * Manages scoped Ask Khabri chat state, watched source filter options, and remaining daily quota.
+ */
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { api } from '@/lib/api';
 
+/**
+ * State and mutation hook powering the Ask Khabri conversational Q&A screen.
+ *
+ * @returns {{ scope: string, setScope: Function, question: string, setQuestion: Function, messages: Array<object>, remaining: number, error: string, watches: Array<object>, isSending: boolean, sendQuestion: () => void }} Hook state.
+ */
 export function useAskKhabri() {
   const { t } = useTranslation();
   const [scope, setScope] = useState('all');

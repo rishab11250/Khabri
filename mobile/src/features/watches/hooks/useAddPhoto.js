@@ -1,11 +1,20 @@
+/**
+ * Coordinates camera permissions, notice photo capture, gallery selection, and `/v1/intake/photo` upload.
+ */
 import { useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { api } from '@/lib/api';
 import { useSessionStore } from '@/store/session';
 
+/**
+ * Screen state hook powering photo notice capture and gallery upload (`add/photo`).
+ *
+ * @returns {object} Camera ref, permission helpers, upload status, and capture/gallery callbacks.
+ */
 export function useAddPhoto() {
   const { t } = useTranslation();
   const router = useRouter();

@@ -1,7 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import { beforeEach, describe, expect, it } from 'vitest';
+
 import { fetchListing, parseListingHtml } from '../src/engine/fetchers/listing.js';
 import { fetchPage, parsePageHtml } from '../src/engine/fetchers/page.js';
 import { fetchRss, parseRssXml } from '../src/engine/fetchers/rss.js';

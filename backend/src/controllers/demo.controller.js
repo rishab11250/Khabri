@@ -1,6 +1,15 @@
+/**
+ * HTTP controller exposing HTML/JSON views and controlled mutations on the Demo Notice Board.
+ */
 import { ok } from '../middleware/envelope.js';
 import { getDemoNotices, mutateDemoBoard, renderDemoBoardHtml } from '../services/demo.service.js';
 
+/**
+ * Creates `/demo/board` GET and POST handlers configured with optional `demoMode` flag.
+ *
+ * @param {object} [options] - Optional `{ demoMode }` override for tests.
+ * @returns {{ getBoard: Function, postBoard: Function }} Route handlers.
+ */
 export function createDemoHandlers(options = {}) {
   const isDemoEnabled = () =>
     options.demoMode !== undefined ? Boolean(options.demoMode) : process.env.DEMO_MODE === 'true';

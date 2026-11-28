@@ -1,6 +1,11 @@
+/**
+ * Defines Zod validation and AI JSON Schema contracts for Ask Khabri Q&A requests/responses.
+ * Deliberately constrains questions to 400 characters and grounded citations to existing change IDs.
+ */
 import mongoose from 'mongoose';
 import { z } from 'zod';
 
+// Request body validation for POST /v1/ask (`scope` is `'all'` or a watched Source ObjectId).
 export const askBodySchema = z.object({
   scope: z
     .string()
@@ -9,12 +14,14 @@ export const askBodySchema = z.object({
   question: z.string().trim().min(2).max(400),
 });
 
+// Runtime validation gate for structured AI replies returned by `router.generateJson`.
 export const askOutputSchema = z.object({
   answer: z.string().trim().min(1).max(1200),
   citedChangeIds: z.array(z.string()).max(10).default([]),
   found: z.boolean(),
 });
 
+// Gemini/structured output JSON Schema mirror sent alongside Ask Khabri prompts.
 export const ASK_JSON_SCHEMA = {
   type: 'object',
   properties: {

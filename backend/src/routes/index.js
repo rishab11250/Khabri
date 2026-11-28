@@ -1,4 +1,8 @@
+/**
+ * Aggregates all public, internal, demo, and `/v1` API routers plus the email-confirmation landing page.
+ */
 import { Router } from 'express';
+
 import { createAskRouter } from './ask.route.js';
 import { createCatalogRouter } from './catalog.route.js';
 import { createChecklistRouter } from './checklist.route.js';
@@ -36,10 +40,18 @@ const AUTH_CONFIRMED_HTML = `<!doctype html>
 </body>
 </html>`;
 
+/**
+ * Builds and wires the root Express API router tree.
+ *
+ * @param {Function} requireAuth - Authenticated user middleware for `/v1/*` routes.
+ * @param {object} [options] - Optional feature flags and dependency injections for routes.
+ * @returns {Router} Root Express router.
+ */
 export function createRoutes(requireAuth, options = {}) {
   const router = Router();
 
   router.use('/health', createHealthRouter());
+  // Renders deep-link landing page after Supabase email confirmation (auth: public; errors: 500 INTERNAL_ERROR).
   router.get('/auth/confirmed', (_req, res) => {
     res.type('html').send(AUTH_CONFIRMED_HTML);
   });

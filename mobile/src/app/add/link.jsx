@@ -1,28 +1,59 @@
-import { Controller } from 'react-hook-form';
+/**
+ * @file Paste-link intake screen validating an official URL and previewing extractability before watching.
+ */
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, Text, View } from 'react-native';
+
 import { FormField } from '@/components/FormField';
 import { Masthead } from '@/components/Masthead';
 import { NewspaperButton } from '@/components/NewspaperButton';
 import { ScreenShell } from '@/components/ScreenShell';
 import { CheckedLinkCard } from '@/features/watches/components/CheckedLinkCard';
 import { useAddLink } from '@/features/watches/hooks/useAddLink';
-import { getFontFamilies, typeScale } from '@/theme/typography';
-import { useTheme } from '@/theme/useTheme';
+import { typeScale } from '@/theme/typography';
+import { useStyles } from '@/theme/useStyles';
 
+const createStyles = (theme, fonts) => ({
+  backWrap: {
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.md,
+  },
+  scrollContent: {
+    paddingBottom: theme.spacing.xxl,
+  },
+  card: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.ruleSubtle,
+    borderWidth: theme.borders.hairline,
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.lg,
+  },
+  errorText: {
+    ...typeScale.caption,
+    color: theme.colors.accent,
+    fontFamily: fonts.bodyMedium,
+    marginTop: theme.spacing.md,
+  },
+});
+
+/**
+ * Validates user-submitted URLs via `/v1/intake/link` and confirms watch subscription.
+ *
+ * @returns {JSX.Element} Add-by-link screen.
+ */
 export default function AddLinkScreen() {
   const { url: paramUrl } = useLocalSearchParams();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
-  const theme = useTheme();
-  const fonts = getFontFamilies(i18n.language);
+  const styles = useStyles(createStyles);
   const { control, errors, checked, errMsg, isChecking, isConfirming, submitCheck, confirmWatch } =
     useAddLink(paramUrl);
 
   return (
     <ScreenShell>
-      <View style={{ alignItems: 'flex-start', marginBottom: theme.spacing.md }}>
+      <View style={styles.backWrap}>
         <NewspaperButton
           size="sm"
           variant="card"
@@ -32,21 +63,10 @@ export default function AddLinkScreen() {
         />
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: theme.spacing.xxl }}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <Masthead title={t('add.linkTitle')} />
 
-        <View
-          style={{
-            backgroundColor: theme.colors.card,
-            borderColor: theme.colors.ruleSubtle,
-            borderWidth: theme.borders.hairline,
-            borderRadius: theme.radii.md,
-            padding: theme.spacing.lg,
-          }}
-        >
+        <View style={styles.card}>
           <Controller
             control={control}
             name="url"
@@ -71,25 +91,10 @@ export default function AddLinkScreen() {
           />
         </View>
 
-        {errMsg ? (
-          <Text
-            style={[
-              typeScale.caption,
-              {
-                color: theme.colors.accent,
-                fontFamily: fonts.bodyMedium,
-                marginTop: theme.spacing.md,
-              },
-            ]}
-          >
-            {errMsg}
-          </Text>
-        ) : null}
+        {errMsg ? <Text style={styles.errorText}>{errMsg}</Text> : null}
 
         <CheckedLinkCard
           checked={checked}
-          theme={theme}
-          fonts={fonts}
           t={t}
           isConfirming={isConfirming}
           onConfirm={confirmWatch}

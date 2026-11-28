@@ -1,21 +1,52 @@
+/**
+ * @file Circle detail screen showing invite actions, shared watches, and member roster.
+ */
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, Text, View } from 'react-native';
+
 import { Masthead } from '@/components/Masthead';
 import { NewspaperButton } from '@/components/NewspaperButton';
 import { ScreenShell } from '@/components/ScreenShell';
 import { CircleShareActions } from '@/features/circles/components/CircleShareActions';
 import { CircleWatchesAndMembers } from '@/features/circles/components/CircleWatchesAndMembers';
 import { useCircleDetail } from '@/features/circles/hooks/useCircleDetail';
-import { getFontFamilies, typeScale } from '@/theme/typography';
-import { useTheme } from '@/theme/useTheme';
+import { typeScale } from '@/theme/typography';
+import { useStyles } from '@/theme/useStyles';
 
+const createStyles = (theme, fonts) => ({
+  backWrap: {
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.md,
+  },
+  emptyBox: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.ruleSubtle,
+    borderWidth: theme.borders.hairline,
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.lg,
+  },
+  emptyText: {
+    ...typeScale.body,
+    color: theme.colors.muted,
+    fontFamily: fonts.body,
+  },
+  scrollContent: {
+    paddingBottom: theme.spacing.xxl,
+    gap: theme.spacing.md,
+  },
+});
+
+/**
+ * Displays Circle metadata, invite sharing tools, shared sources, and owner moderation actions.
+ *
+ * @returns {JSX.Element} Circle detail screen.
+ */
 export default function CircleDetailScreen() {
   const { id } = useLocalSearchParams();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
-  const theme = useTheme();
-  const fonts = getFontFamilies(i18n.language);
+  const styles = useStyles(createStyles);
   const {
     circle,
     userWatches,
@@ -34,7 +65,7 @@ export default function CircleDetailScreen() {
 
   return (
     <ScreenShell>
-      <View style={{ alignItems: 'flex-start', marginBottom: theme.spacing.md }}>
+      <View style={styles.backWrap}>
         <NewspaperButton
           size="sm"
           variant="card"
@@ -45,23 +76,13 @@ export default function CircleDetailScreen() {
       </View>
 
       {isLoading || !circle ? (
-        <View
-          style={{
-            backgroundColor: theme.colors.card,
-            borderColor: theme.colors.ruleSubtle,
-            borderWidth: theme.borders.hairline,
-            borderRadius: theme.radii.md,
-            padding: theme.spacing.lg,
-          }}
-        >
-          <Text style={[typeScale.body, { color: theme.colors.muted, fontFamily: fonts.body }]}>
-            {queryError || t('common.loading')}
-          </Text>
+        <View style={styles.emptyBox}>
+          <Text style={styles.emptyText}>{queryError || t('common.loading')}</Text>
         </View>
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: theme.spacing.xxl, gap: theme.spacing.md }}
+          contentContainerStyle={styles.scrollContent}
         >
           <Masthead
             title={circle.name}
@@ -70,8 +91,6 @@ export default function CircleDetailScreen() {
           />
 
           <CircleShareActions
-            theme={theme}
-            fonts={fonts}
             t={t}
             copied={copied}
             contacts={contacts}
@@ -84,8 +103,6 @@ export default function CircleDetailScreen() {
           <CircleWatchesAndMembers
             circle={circle}
             userWatches={userWatches}
-            theme={theme}
-            fonts={fonts}
             t={t}
             isAddingWatch={isAddingWatch}
             onAddWatch={addWatch}

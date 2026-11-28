@@ -1,9 +1,14 @@
+/**
+ * Manages deadline fetching, local JSON caching, reminder scheduling, manual form entry,
+ * status toggling, CSV export, and device calendar event creation.
+ */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
+
 import { exportDeadlinesCsv } from '@/features/deadlines/exportDeadlinesCsv';
 import { addDeadlineToDeviceCalendar, syncDeadlineReminders } from '@/features/deadlines/reminders';
 import { api } from '@/lib/api';
@@ -11,6 +16,11 @@ import { readJsonCache, writeJsonCache } from '@/lib/fileCache';
 
 const DEADLINES_CACHE_KEY = 'deadlines-cache.json';
 
+/**
+ * Screen state hook powering the Deadlines list and calendar screen.
+ *
+ * @returns {object} Deadlines list, summary counters, form controls, and export/calendar handlers.
+ */
 export function useDeadlines() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();

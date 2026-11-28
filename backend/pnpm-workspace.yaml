@@ -2,3 +2,5 @@ allowBuilds:
   esbuild: true
   mongodb-memory-server: true
   protobufjs: true
+minimumReleaseAgeExclude:
+  - eslint-plugin-jsdoc@65.5.6

@@ -1,11 +1,20 @@
+/**
+ * Loads user watches with local JSON cache fallback and mutates mute, priority, delete, and manual refresh.
+ */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { api } from '@/lib/api';
 import { readJsonCache, writeJsonCache } from '@/lib/fileCache';
 
 const WATCHES_CACHE_KEY = 'watches-cache.json';
 
+/**
+ * Screen state hook powering the Watching tab (`(tabs)/watching`).
+ *
+ * @returns {object} Watches list, refresh/error state, and watch mutation handlers.
+ */
 export function useWatches() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();

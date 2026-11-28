@@ -1,21 +1,38 @@
+/**
+ * @file About screen displaying version metadata, independence disclaimer, privacy note, and catalog link.
+ */
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
+
 import { NewspaperButton } from '@/components/NewspaperButton';
 import { ScreenShell } from '@/components/ScreenShell';
 import { AboutContent } from '@/features/settings/components/AboutContent';
-import { getFontFamilies } from '@/theme/typography';
-import { useTheme } from '@/theme/useTheme';
+import { useStyles } from '@/theme/useStyles';
 
+const createStyles = (theme) => ({
+  backWrap: {
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.md,
+  },
+  scrollContent: {
+    paddingBottom: theme.spacing.xxl,
+  },
+});
+
+/**
+ * Renders app attribution, non-government disclaimer, and shortcut to the verified catalog.
+ *
+ * @returns {JSX.Element} About screen.
+ */
 export default function AboutScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
-  const theme = useTheme();
-  const fonts = getFontFamilies(i18n.language);
+  const styles = useStyles(createStyles);
 
   return (
     <ScreenShell>
-      <View style={{ alignItems: 'flex-start', marginBottom: theme.spacing.md }}>
+      <View style={styles.backWrap}>
         <NewspaperButton
           size="sm"
           variant="card"
@@ -25,11 +42,8 @@ export default function AboutScreen() {
         />
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: theme.spacing.xxl }}
-      >
-        <AboutContent theme={theme} fonts={fonts} t={t} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <AboutContent t={t} />
 
         <NewspaperButton
           icon="compass-outline"

@@ -1,3 +1,8 @@
+/**
+ * Classifies whether a structural diff is actionable news or ignorable boilerplate noise.
+ * Deliberately rejects page edits below 25 characters unless dates, numbers, or eligibility changed,
+ * preventing ticker/typos from consuming AI calls or spamming users.
+ */
 const HIGH_IMPACT_KEYWORDS =
   /\b(admit\s*card|hall\s*ticket|result|merit\s*list|date|deadline|last\s*date|extend(?:ed|sion)|cancel(?:led|lation)?|postpon(?:ed|ement)|vacanc(?:y|ies)|recruitment|schedule|exam(?:ination)?|eligib(?:le|ility)|cut-?off|notification|revised|corrigendum)\b/i;
 
@@ -10,76 +15,72 @@ function setsDiffer(a, b) {
   return b.some((x) => !setA.has(x));
 }
 
-export function evaluateMateriality({ diffResult, beforeSignals, afterSignals }) {
-  if (!diffResult?.changed) {
-    return {
-      material: false,
-      impact: 'LOW',
-      kind: 'no_change',
-      reasons: ['no_diff'],
-    };
-  }
+function extractDateIsos(signals) {
+  return (signals?.dates || []).map((d) => d.iso);
+}
 
-  const prevDates = (beforeSignals?.dates || []).map((d) => d.iso);
-  const nextDates = (afterSignals?.dates || []).map((d) => d.iso);
-  const datesChanged = setsDiffer(prevDates, nextDates);
-
-  const numbersChanged = setsDiffer(beforeSignals?.numbers || [], afterSignals?.numbers || []);
+function collectSignalChanges(beforeSignals = {}, afterSignals = {}) {
+  const datesChanged = setsDiffer(extractDateIsos(beforeSignals), extractDateIsos(afterSignals));
+  const numbersChanged = setsDiffer(beforeSignals.numbers || [], afterSignals.numbers || []);
   const eligibilityChanged = setsDiffer(
-    beforeSignals?.eligibility || [],
-    afterSignals?.eligibility || [],
+    beforeSignals.eligibility || [],
+    afterSignals.eligibility || [],
   );
 
-  if (diffResult.type === 'listing') {
-    const addedTitles = diffResult.added.map((i) => `${i.title} ${i.dateText}`).join(' ');
-    const updatedTitles = diffResult.updated
-      .map((u) => `${u.after.title} ${u.after.dateText}`)
-      .join(' ');
-    const combinedText = `${addedTitles} ${updatedTitles}`;
+  const signalReasons = [
+    datesChanged ? 'dates_changed' : null,
+    numbersChanged ? 'numbers_changed' : null,
+    eligibilityChanged ? 'eligibility_changed' : null,
+  ].filter(Boolean);
 
-    let kind = 'notice_updated';
-    if (diffResult.added.length > 0) kind = 'new_notice';
-    else if (diffResult.removed.length > 0 && diffResult.updated.length === 0) {
-      kind = 'notice_removed';
-    }
+  return {
+    datesChanged,
+    signalChanged: signalReasons.length > 0,
+    signalReasons,
+  };
+}
 
-    let impact = 'MEDIUM';
-    const reasons = [];
-    if (diffResult.added.length > 0) reasons.push(`added:${diffResult.added.length}`);
-    if (diffResult.updated.length > 0) reasons.push(`updated:${diffResult.updated.length}`);
-    if (diffResult.removed.length > 0) reasons.push(`removed:${diffResult.removed.length}`);
+function resolveListingKind(diffResult) {
+  if (diffResult.added.length > 0) return 'new_notice';
+  if (diffResult.removed.length > 0 && diffResult.updated.length === 0) return 'notice_removed';
+  return 'notice_updated';
+}
 
-    if (
-      datesChanged ||
-      numbersChanged ||
-      eligibilityChanged ||
-      HIGH_IMPACT_KEYWORDS.test(combinedText)
-    ) {
-      impact = 'HIGH';
-      if (datesChanged) reasons.push('dates_changed');
-      if (numbersChanged) reasons.push('numbers_changed');
-      if (eligibilityChanged) reasons.push('eligibility_changed');
-    }
+function evaluateListingMateriality(diffResult, { signalChanged, signalReasons }) {
+  const addedTitles = diffResult.added.map((i) => `${i.title} ${i.dateText}`).join(' ');
+  const updatedTitles = diffResult.updated
+    .map((u) => `${u.after.title} ${u.after.dateText}`)
+    .join(' ');
+  const combinedText = `${addedTitles} ${updatedTitles}`;
 
-    return { material: true, impact, kind, reasons };
-  }
-
-  // Page diff
   const reasons = [];
-  if (datesChanged) reasons.push('dates_changed');
-  if (numbersChanged) reasons.push('numbers_changed');
-  if (eligibilityChanged) reasons.push('eligibility_changed');
+  if (diffResult.added.length > 0) reasons.push(`added:${diffResult.added.length}`);
+  if (diffResult.updated.length > 0) reasons.push(`updated:${diffResult.updated.length}`);
+  if (diffResult.removed.length > 0) reasons.push(`removed:${diffResult.removed.length}`);
 
-  if (datesChanged || numbersChanged || eligibilityChanged) {
+  const isHigh = signalChanged || HIGH_IMPACT_KEYWORDS.test(combinedText);
+  if (isHigh) reasons.push(...signalReasons);
+
+  return {
+    material: true,
+    impact: isHigh ? 'HIGH' : 'MEDIUM',
+    kind: resolveListingKind(diffResult),
+    reasons,
+  };
+}
+
+function evaluatePageMateriality(diffResult, { datesChanged, signalChanged, signalReasons }) {
+  // Date, numeric, or eligibility diffs always surface as HIGH regardless of short character count.
+  if (signalChanged) {
     return {
       material: true,
       impact: 'HIGH',
       kind: datesChanged ? 'date_change' : 'rule_change',
-      reasons,
+      reasons: [...signalReasons],
     };
   }
 
-  const changedText = `${diffResult.beforeExcerpt} ${diffResult.afterExcerpt}`;
+  // Filter trivial punctuation/whitespace tweaks under 25 characters without signal changes.
   if (diffResult.changedChars < 25) {
     return {
       material: false,
@@ -89,7 +90,10 @@ export function evaluateMateriality({ diffResult, beforeSignals, afterSignals })
     };
   }
 
+  const changedText = `${diffResult.beforeExcerpt} ${diffResult.afterExcerpt}`;
+  const reasons = [];
   let impact = 'LOW';
+
   if (HIGH_IMPACT_KEYWORDS.test(changedText)) {
     impact = 'HIGH';
     reasons.push('high_keyword_match');
@@ -100,10 +104,31 @@ export function evaluateMateriality({ diffResult, beforeSignals, afterSignals })
     reasons.push('minor_wording_change');
   }
 
-  return {
-    material: true,
-    impact,
-    kind: 'page_update',
-    reasons,
-  };
+  return { material: true, impact, kind: 'page_update', reasons };
+}
+
+/**
+ * Evaluates a diff and extracted signals to decide whether a change warrants AI analysis and alerts.
+ *
+ * @param {object} params - Diff output and extracted before/after signals.
+ * @param {object} params.diffResult - Output from `diffListings` or `diffPages`.
+ * @param {object} [params.beforeSignals] - Signals from the previous snapshot.
+ * @param {object} [params.afterSignals] - Signals from the new snapshot.
+ * @returns {{ material: boolean, impact: 'HIGH'|'MEDIUM'|'LOW', kind: string, reasons: string[] }} Materiality decision.
+ */
+export function evaluateMateriality({ diffResult, beforeSignals, afterSignals }) {
+  if (!diffResult?.changed) {
+    return {
+      material: false,
+      impact: 'LOW',
+      kind: 'no_change',
+      reasons: ['no_diff'],
+    };
+  }
+
+  const signalInfo = collectSignalChanges(beforeSignals, afterSignals);
+  if (diffResult.type === 'listing') {
+    return evaluateListingMateriality(diffResult, signalInfo);
+  }
+  return evaluatePageMateriality(diffResult, signalInfo);
 }

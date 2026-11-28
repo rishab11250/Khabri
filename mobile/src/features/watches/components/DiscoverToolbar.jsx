@@ -1,12 +1,135 @@
+/**
+ * @file Discover header toolbar combining Link/Photo intake buttons, clipboard suggestion, search input, and category filter pills.
+ */
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+
 import { NewspaperButton } from '@/components/NewspaperButton';
 import { INTEREST_CATEGORIES } from '@/constants/india';
 import { typeScale } from '@/theme/typography';
+import { useStyles } from '@/theme/useStyles';
+import { useTheme } from '@/theme/useTheme';
 
+const createStyles = (theme, fonts) => ({
+  ctaRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+  flexOne: {
+    flex: 1,
+  },
+  clipboardCard: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.accent,
+    borderWidth: theme.borders.hairline,
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    gap: theme.spacing.xs,
+  },
+  clipboardHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  clipboardLabel: {
+    ...typeScale.caption,
+    color: theme.colors.accent,
+    fontFamily: fonts.bodyBold,
+  },
+  clipboardUrl: {
+    ...typeScale.caption,
+    color: theme.colors.ink,
+    fontFamily: fonts.body,
+  },
+  clipboardBtns: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    marginTop: 4,
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.ruleSubtle,
+    borderWidth: theme.borders.hairline,
+    borderRadius: theme.radii.sm,
+    paddingHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+    gap: theme.spacing.sm,
+  },
+  searchInput: {
+    ...typeScale.body,
+    flex: 1,
+    color: theme.colors.ink,
+    fontFamily: fonts.body,
+    paddingVertical: theme.spacing.md,
+  },
+  clearBtn: {
+    minWidth: 32,
+    minHeight: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorText: {
+    ...typeScale.caption,
+    color: theme.colors.accent,
+    fontFamily: fonts.bodyMedium,
+    marginBottom: theme.spacing.xs,
+  },
+  pillsScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+    marginBottom: theme.spacing.md,
+  },
+  pillsContent: {
+    gap: theme.spacing.xs,
+    alignItems: 'center',
+    paddingVertical: 2,
+  },
+  pill: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.ruleSubtle,
+    borderWidth: theme.borders.hairline,
+    borderRadius: theme.radii.pill,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: 8,
+    minHeight: 38,
+    justifyContent: 'center',
+  },
+  pillActive: {
+    backgroundColor: theme.colors.accent,
+    borderColor: theme.colors.accent,
+  },
+  pillText: {
+    ...typeScale.caption,
+    color: theme.colors.ink,
+    fontFamily: fonts.bodyBold,
+  },
+  pillTextActive: {
+    color: theme.colors.onAccent,
+  },
+});
+
+/**
+ * Renders intake entry actions, optional clipboard URL prompt, search bar, and category filter strip.
+ *
+ * @param {object} props - Component props.
+ * @param {Function} props.t - Translation helper.
+ * @param {string | null} props.clipboardUrl - Detected HTTP(S) URL read from device clipboard.
+ * @param {Function} props.onClearClipboard - Dismisses the clipboard prompt.
+ * @param {Function} props.onWatchClipboard - Navigates directly to link intake with the clipboard URL.
+ * @param {Function} props.onPressPasteLink - Opens manual paste-link intake flow.
+ * @param {Function} props.onPressScanPhoto - Opens circular photo scanner flow.
+ * @param {string} props.search - Controlled catalog search text.
+ * @param {Function} props.onChangeSearch - Updates catalog search query.
+ * @param {string | null} props.category - Selected category slug or `null` for all.
+ * @param {Function} props.onChangeCategory - Selects active category filter.
+ * @param {string | null} [props.actionError] - Inline follow/unfollow error message.
+ * @returns {JSX.Element} Discover screen filter toolbar.
+ */
 export function DiscoverToolbar({
-  theme,
-  fonts,
   t,
   clipboardUrl,
   onClearClipboard,
@@ -19,10 +142,13 @@ export function DiscoverToolbar({
   onChangeCategory,
   actionError,
 }) {
+  const theme = useTheme();
+  const styles = useStyles(createStyles);
+
   return (
     <>
-      <View style={{ flexDirection: 'row', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}>
-        <View style={{ flex: 1 }}>
+      <View style={styles.ctaRow}>
+        <View style={styles.flexOne}>
           <NewspaperButton
             variant="card"
             icon="link-outline"
@@ -30,7 +156,7 @@ export function DiscoverToolbar({
             onPress={onPressPasteLink}
           />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={styles.flexOne}>
           <NewspaperButton
             variant="primary"
             icon="camera-outline"
@@ -41,35 +167,15 @@ export function DiscoverToolbar({
       </View>
 
       {clipboardUrl ? (
-        <View
-          style={{
-            backgroundColor: theme.colors.card,
-            borderColor: theme.colors.accent,
-            borderWidth: theme.borders.hairline,
-            borderRadius: theme.radii.md,
-            padding: theme.spacing.md,
-            marginBottom: theme.spacing.md,
-            gap: theme.spacing.xs,
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View style={styles.clipboardCard}>
+          <View style={styles.clipboardHead}>
             <Ionicons name="clipboard-outline" size={14} color={theme.colors.accent} />
-            <Text
-              style={[
-                typeScale.caption,
-                { color: theme.colors.accent, fontFamily: fonts.bodyBold },
-              ]}
-            >
-              {t('add.clipboardTitle')}
-            </Text>
+            <Text style={styles.clipboardLabel}>{t('add.clipboardTitle')}</Text>
           </View>
-          <Text
-            numberOfLines={1}
-            style={[typeScale.caption, { color: theme.colors.ink, fontFamily: fonts.body }]}
-          >
+          <Text numberOfLines={1} style={styles.clipboardUrl}>
             {clipboardUrl}
           </Text>
-          <View style={{ flexDirection: 'row', gap: theme.spacing.sm, marginTop: 4 }}>
+          <View style={styles.clipboardBtns}>
             <NewspaperButton size="sm" label={t('add.watchLink')} onPress={onWatchClipboard} />
             <NewspaperButton
               size="sm"
@@ -81,19 +187,7 @@ export function DiscoverToolbar({
         </View>
       ) : null}
 
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: theme.colors.card,
-          borderColor: theme.colors.ruleSubtle,
-          borderWidth: theme.borders.hairline,
-          borderRadius: theme.radii.sm,
-          paddingHorizontal: theme.spacing.md,
-          marginBottom: theme.spacing.sm,
-          gap: theme.spacing.sm,
-        }}
-      >
+      <View style={styles.searchBox}>
         <Ionicons name="search-outline" size={18} color={theme.colors.muted} />
         <TextInput
           value={search}
@@ -101,52 +195,26 @@ export function DiscoverToolbar({
           placeholder={t('discover.searchPlaceholder')}
           placeholderTextColor={theme.colors.muted}
           accessibilityLabel={t('discover.searchPlaceholder')}
-          style={[
-            typeScale.body,
-            {
-              flex: 1,
-              color: theme.colors.ink,
-              fontFamily: fonts.body,
-              paddingVertical: theme.spacing.md,
-            },
-          ]}
+          style={styles.searchInput}
         />
         {search ? (
           <Pressable
             accessibilityRole="button"
             onPress={() => onChangeSearch('')}
-            style={{
-              minWidth: 32,
-              minHeight: 32,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            style={styles.clearBtn}
           >
             <Ionicons name="close-circle" size={18} color={theme.colors.muted} />
           </Pressable>
         ) : null}
       </View>
 
-      {actionError ? (
-        <Text
-          style={[
-            typeScale.caption,
-            {
-              color: theme.colors.accent,
-              fontFamily: fonts.bodyMedium,
-              marginBottom: theme.spacing.xs,
-            },
-          ]}
-        >
-          {actionError}
-        </Text>
-      ) : null}
+      {actionError ? <Text style={styles.errorText}>{actionError}</Text> : null}
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={{ flexGrow: 0, flexShrink: 0, marginBottom: theme.spacing.md }}
-        contentContainerStyle={{ gap: theme.spacing.xs, alignItems: 'center', paddingVertical: 2 }}
+        style={styles.pillsScroll}
+        contentContainerStyle={styles.pillsContent}
       >
         {['', ...INTEREST_CATEGORIES].map((cat) => {
           const active = category === cat;
@@ -155,26 +223,9 @@ export function DiscoverToolbar({
               key={cat || 'all'}
               accessibilityRole="button"
               onPress={() => onChangeCategory(cat)}
-              style={{
-                backgroundColor: active ? theme.colors.accent : theme.colors.card,
-                borderColor: active ? theme.colors.accent : theme.colors.ruleSubtle,
-                borderWidth: theme.borders.hairline,
-                borderRadius: theme.radii.pill,
-                paddingHorizontal: theme.spacing.md,
-                paddingVertical: 8,
-                minHeight: 38,
-                justifyContent: 'center',
-              }}
+              style={[styles.pill, active ? styles.pillActive : null]}
             >
-              <Text
-                style={[
-                  typeScale.caption,
-                  {
-                    color: active ? theme.colors.onAccent : theme.colors.ink,
-                    fontFamily: fonts.bodyBold,
-                  },
-                ]}
-              >
+              <Text style={[styles.pillText, active ? styles.pillTextActive : null]}>
                 {cat ? t(`onboarding.categories.${cat}`) : t('discover.allCategories')}
               </Text>
             </Pressable>

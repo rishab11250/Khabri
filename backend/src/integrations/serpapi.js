@@ -1,5 +1,12 @@
+/**
+ * Integrates Google Search results via SerpAPI with 6h caching and two-key monthly budget guardrails.
+ * Deliberately rotates from key 1 to key 2 at 90% utilization and halts all calls at 95% total
+ * budget so paid tier overages cannot happen accidentally.
+ */
 import { createHash } from 'node:crypto';
+
 import axios from 'axios';
+
 import { getMonthPeriod } from '../ai/quota.js';
 import { Quota, SearchCache } from '../models/index.js';
 
@@ -11,7 +18,13 @@ function nextMonthResetIso(now = new Date()) {
   return new Date(Date.UTC(y, m + 1, 1)).toISOString().slice(0, 10);
 }
 
-export function hashSearchQuery(query) {
+/**
+ * Hashes normalized search query text into a stable SHA-256 `SearchCache` key.
+ *
+ * @param {string} query - Raw search query string.
+ * @returns {string} 64-character hex digest.
+ */
+function hashSearchQuery(query) {
   return createHash('sha256')
     .update(
       String(query || '')
@@ -33,7 +46,13 @@ function getConfiguredKeys(options = {}) {
   return keys;
 }
 
-export async function getSerpApiBudgetStatus(options = {}) {
+/**
+ * Computes monthly SerpAPI usage across configured keys and checks the 95% hard stop.
+ *
+ * @param {object} [options] - Optional clock (`now`), key overrides, and monthly limits.
+ * @returns {Promise<{ configured: boolean, exhausted: boolean, used: number, limit: number, hardStop?: number, resetDate: string, keys: Array<object> }>} Budget status.
+ */
+async function getSerpApiBudgetStatus(options = {}) {
   const now = options.now ?? new Date();
   const period = getMonthPeriod(now);
   const keys = getConfiguredKeys(options);
@@ -64,6 +83,7 @@ export async function getSerpApiBudgetStatus(options = {}) {
 
   const totalUsed = keyStats.reduce((sum, k) => sum + k.used, 0);
   const totalLimit = keyStats.reduce((sum, k) => sum + k.limit, 0);
+  // Enforce a 95% ceiling to keep a small headroom buffer against concurrent cron/intake requests.
   const hardStop = Math.floor(totalLimit * 0.95);
 
   return {
@@ -77,6 +97,44 @@ export async function getSerpApiBudgetStatus(options = {}) {
   };
 }
 
+function selectAvailableSerpKey(keys, keyStats) {
+  // Switch from key 1 to key 2 at 90% of key 1 so both keys share peak traffic smoothly.
+  for (let i = 0; i < keys.length; i += 1) {
+    const keyCfg = keys[i];
+    const stat = keyStats[i];
+    const threshold = i === 0 && keys.length > 1 ? Math.floor(keyCfg.limit * 0.9) : keyCfg.limit;
+    if (stat.used < threshold) return keyCfg;
+  }
+  return null;
+}
+
+async function fetchSerpResults({ cleanQuery, chosenKey, httpClient }) {
+  const res = await httpClient.get(SERPAPI_URL, {
+    timeout: 8000,
+    params: {
+      q: cleanQuery,
+      api_key: chosenKey.apiKey,
+      engine: 'google',
+      gl: 'in',
+      hl: 'en',
+      num: 5,
+    },
+  });
+
+  return (res.data?.organic_results || []).slice(0, 5).map((r) => ({
+    title: r.title || '',
+    link: r.link || '',
+    snippet: r.snippet || '',
+  }));
+}
+
+/**
+ * Searches Google via SerpAPI with `SearchCache` lookup, key rotation, and 95% budget cutoff.
+ *
+ * @param {string} query - Search query string.
+ * @param {object} [options] - Cache bypass (`skipCache`), key/limit overrides, and HTTP client mock.
+ * @returns {Promise<{ results: Array<object>, cached: boolean, stopped: boolean, resetDate?: string, keyAlias?: string }>} Search results and budget status.
+ */
 export async function searchSerpApi(query, options = {}) {
   const cleanQuery = String(query || '').trim();
   if (!cleanQuery) return { results: [], cached: false, stopped: false };
@@ -95,26 +153,10 @@ export async function searchSerpApi(query, options = {}) {
   const budget = await getSerpApiBudgetStatus(options);
 
   if (!budget.configured || budget.exhausted) {
-    return {
-      results: [],
-      cached: false,
-      stopped: true,
-      resetDate: budget.resetDate,
-    };
+    return { results: [], cached: false, stopped: true, resetDate: budget.resetDate };
   }
 
-  // Switch from key 1 to key 2 at 90% of key 1
-  let chosen = null;
-  for (let i = 0; i < keys.length; i += 1) {
-    const keyCfg = keys[i];
-    const stat = budget.keys[i];
-    const threshold = i === 0 && keys.length > 1 ? Math.floor(keyCfg.limit * 0.9) : keyCfg.limit;
-    if (stat.used < threshold) {
-      chosen = keyCfg;
-      break;
-    }
-  }
-
+  const chosen = selectAvailableSerpKey(keys, budget.keys);
   if (!chosen) {
     return { results: [], cached: false, stopped: true, resetDate: budget.resetDate };
   }
@@ -125,24 +167,11 @@ export async function searchSerpApi(query, options = {}) {
     { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
   );
 
-  const httpClient = options.httpClient ?? axios;
-  const res = await httpClient.get(SERPAPI_URL, {
-    timeout: 8000,
-    params: {
-      q: cleanQuery,
-      api_key: chosen.apiKey,
-      engine: 'google',
-      gl: 'in',
-      hl: 'en',
-      num: 5,
-    },
+  const results = await fetchSerpResults({
+    cleanQuery,
+    chosenKey: chosen,
+    httpClient: options.httpClient ?? axios,
   });
-
-  const results = (res.data?.organic_results || []).slice(0, 5).map((r) => ({
-    title: r.title || '',
-    link: r.link || '',
-    snippet: r.snippet || '',
-  }));
 
   await SearchCache.findOneAndUpdate(
     { queryHash },

@@ -1,14 +1,23 @@
+/**
+ * Provides step-by-step hooks for the 4-screen onboarding flow (language, state/GPS, interests, notifications).
+ */
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { matchIndianState } from '@/constants/india';
 import { api } from '@/lib/api';
 import { isApiConfigured } from '@/lib/env';
 import { useSessionStore } from '@/store/session';
 import { useSettingsStore } from '@/store/settings';
 
+/**
+ * Hook for onboarding step 1 (UI language selection and auth/state step routing).
+ *
+ * @returns {{ language: string, selected: string, choose: Function, handleContinue: () => void }} Step 1 controls.
+ */
 export function useOnboardingLanguage() {
   const router = useRouter();
   const { language, setLanguage } = useSettingsStore();
@@ -33,6 +42,11 @@ export function useOnboardingLanguage() {
   return { language, selected, choose, handleContinue };
 }
 
+/**
+ * Hook for onboarding step 2 (Indian state picker and GPS reverse-geocode helper).
+ *
+ * @returns {object} Selected state, GPS detector status, and continuation handler.
+ */
 export function useOnboardingState() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -96,6 +110,11 @@ export function useOnboardingState() {
   };
 }
 
+/**
+ * Hook for onboarding step 3 (multi-select notice categories with min-1 guard).
+ *
+ * @returns {object} Selected categories, validation error, toggle handler, and continuation action.
+ */
 export function useOnboardingInterests() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -122,6 +141,11 @@ export function useOnboardingInterests() {
   return { language, selected, error, toggle, handleContinue };
 }
 
+/**
+ * Hook for onboarding step 4 (optional notification permission request and `/v1/me` completion save).
+ *
+ * @returns {{ language: string, saving: boolean, error: string, completeOnboarding: (askPermission: boolean) => Promise<void> }} Step 4 controls.
+ */
 export function useOnboardingPermissions() {
   const { t } = useTranslation();
   const router = useRouter();

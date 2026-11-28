@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { extractPdfTextFromBuffer } from '../src/engine/pdfExtract.js';
 
 function buildMinimalPdf(text) {

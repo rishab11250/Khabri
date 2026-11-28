@@ -1,4 +1,9 @@
+/**
+ * Builds cursor-paginated change feeds, single change cards, and cached native translations.
+ * Deliberately queries `limit + 1` rows so `nextCursor` is emitted only when more items exist.
+ */
 import mongoose from 'mongoose';
+
 import { buildAiCacheKey, getCachedAi, setCachedAi } from '../ai/cache.js';
 import { wrapUntrustedData } from '../ai/prompts.js';
 import { createAiRouter } from '../ai/router.js';
@@ -45,6 +50,16 @@ function formatCard(change, source, checklistItems = []) {
   };
 }
 
+/**
+ * Returns a cursor-paginated feed of changes across `userId`'s currently watched sources.
+ *
+ * @param {string|object} userId - Authenticated user ID.
+ * @param {object} params - Pagination arguments.
+ * @param {string} [params.cursor] - ISO timestamp cursor from previous response.
+ * @param {number} params.limit - Maximum cards to return per page.
+ * @returns {Promise<{ items: Array<object>, nextCursor: string|null }>} Feed slice and next cursor.
+ * @throws {AppError} When `cursor` is not a valid date string (400).
+ */
 export async function getUserFeed(userId, { cursor, limit }) {
   const watches = await Watch.find({ userId }).select('sourceId').lean();
   const sourceIds = watches.map((w) => w.sourceId);
@@ -96,6 +111,14 @@ export async function getUserFeed(userId, { cursor, limit }) {
   };
 }
 
+/**
+ * Loads a single change card enriched with source metadata and `userId`'s checklist items.
+ *
+ * @param {string|object} userId - Authenticated user ID.
+ * @param {string} changeId - Target change ObjectId string.
+ * @returns {Promise<object>} Formatted change card.
+ * @throws {AppError} When `changeId` is invalid (400) or missing (404).
+ */
 export async function getChangeCard(userId, changeId) {
   if (!mongoose.Types.ObjectId.isValid(changeId)) {
     throw new AppError(400, 'INVALID_ID', 'Invalid change id');
@@ -114,6 +137,59 @@ export async function getChangeCard(userId, changeId) {
   return formatCard(change, source, checklist);
 }
 
+async function generateAndCacheTranslation({ lang, payload, cacheKey, aiRouter }) {
+  const routerAi = aiRouter ?? createAiRouter();
+  try {
+    const { result: aiTranslation } = await routerAi.generateJson({
+      role: 'user',
+      systemInstruction: `Translate only the provided explanation fields into natural native ${LANG_NAMES[lang]} (not transliteration). Preserve any dates and numbers accurately. Never add URLs. Return JSON only.`,
+      prompt: wrapUntrustedData('EXPLANATION_FIELDS', JSON.stringify(payload)),
+      jsonSchema: TRANSLATE_JSON_SCHEMA,
+    });
+    const parsed = translateOutputSchema.parse(aiTranslation);
+    if (hasDisallowedUrls(`${parsed.why} ${parsed.checklist.join(' ')}`, [payload.why])) {
+      throw new AppError(502, 'TRANSLATION_REJECTED', 'Invalid URL in translation');
+    }
+    await setCachedAi(cacheKey, parsed);
+    return parsed;
+  } catch (err) {
+    if (err instanceof AppError) throw err;
+    throw new AppError(502, 'TRANSLATION_FAILED', err?.message || 'Translation unavailable');
+  }
+}
+
+function getCachedOrEnglishTranslation(change, lang) {
+  const analysis = change.analysis;
+  if (lang === 'en') {
+    return {
+      lang: 'en',
+      why: analysis?.why ?? '',
+      checklist: analysis?.checklist ?? [],
+      cached: true,
+    };
+  }
+
+  const existing = change.translations?.[lang];
+  if (!existing?.why) return null;
+
+  return {
+    lang,
+    why: existing.why,
+    checklist: existing.checklist ?? [],
+    cached: true,
+  };
+}
+
+/**
+ * Translates a change card's explanation and checklist into `hi` or `gu` (or returns `en` directly).
+ * Checks embedded card translations and `AiCache` before invoking the AI router.
+ *
+ * @param {string} changeId - Target change ObjectId string.
+ * @param {'en'|'hi'|'gu'} lang - Requested target language code.
+ * @param {object} [aiRouter] - Optional AI router override for testing.
+ * @returns {Promise<{ lang: string, why: string, checklist: string[], cached: boolean }>} Translation payload.
+ * @throws {AppError} When ID is invalid (400), change missing (404), or translation fails URL/provider checks (502).
+ */
 export async function translateChangeCard(changeId, lang, aiRouter) {
   if (!mongoose.Types.ObjectId.isValid(changeId)) {
     throw new AppError(400, 'INVALID_ID', 'Invalid change id');
@@ -124,65 +200,22 @@ export async function translateChangeCard(changeId, lang, aiRouter) {
     throw new AppError(404, 'CHANGE_NOT_FOUND', 'Change card not found');
   }
 
-  if (lang === 'en') {
-    return {
-      lang: 'en',
-      why: change.analysis?.why ?? '',
-      checklist: change.analysis?.checklist ?? [],
-      cached: true,
-    };
-  }
-
-  const existing = change.translations?.[lang];
-  if (existing?.why) {
-    return {
-      lang,
-      why: existing.why,
-      checklist: existing.checklist ?? [],
-      cached: true,
-    };
-  }
+  const ready = getCachedOrEnglishTranslation(change, lang);
+  if (ready) return ready;
 
   const payload = {
     why: change.analysis?.why ?? '',
     checklist: change.analysis?.checklist ?? [],
   };
-  const cacheKey = buildAiCacheKey({
-    task: 'translate_change',
-    language: lang,
-    input: payload,
-  });
-
+  const cacheKey = buildAiCacheKey({ task: 'translate_change', language: lang, input: payload });
   let translated = await getCachedAi(cacheKey);
   const cached = Boolean(translated);
 
   if (!translated) {
-    const routerAi = aiRouter ?? createAiRouter();
-    try {
-      const { result: aiTranslation } = await routerAi.generateJson({
-        role: 'user',
-        systemInstruction: `Translate only the provided explanation fields into natural native ${LANG_NAMES[lang]} (not transliteration). Preserve any dates and numbers accurately. Never add URLs. Return JSON only.`,
-        prompt: wrapUntrustedData('EXPLANATION_FIELDS', JSON.stringify(payload)),
-        jsonSchema: TRANSLATE_JSON_SCHEMA,
-      });
-      const parsed = translateOutputSchema.parse(aiTranslation);
-      if (hasDisallowedUrls(`${parsed.why} ${parsed.checklist.join(' ')}`, [payload.why])) {
-        throw new AppError(502, 'TRANSLATION_REJECTED', 'Invalid URL in translation');
-      }
-      translated = parsed;
-      await setCachedAi(cacheKey, translated);
-    } catch (err) {
-      if (err instanceof AppError) throw err;
-      throw new AppError(502, 'TRANSLATION_FAILED', err?.message || 'Translation unavailable');
-    }
+    translated = await generateAndCacheTranslation({ lang, payload, cacheKey, aiRouter });
   }
 
   await Change.updateOne({ _id: change._id }, { $set: { [`translations.${lang}`]: translated } });
 
-  return {
-    lang,
-    why: translated.why,
-    checklist: translated.checklist,
-    cached,
-  };
+  return { lang, why: translated.why, checklist: translated.checklist, cached };
 }

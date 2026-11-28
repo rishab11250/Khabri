@@ -1,15 +1,24 @@
+/**
+ * Manages sign-in form validation, Supabase password authentication, and backend profile sync.
+ */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
+
 import { api } from '@/lib/api';
 import { isApiConfigured } from '@/lib/env';
 import { supabase } from '@/lib/supabase';
 import { useSessionStore } from '@/store/session';
 import { useSettingsStore } from '@/store/settings';
 
+/**
+ * Form state and submission hook powering the Sign-In screen.
+ *
+ * @returns {object} Language switcher, React Hook Form controls, errors, and `submitSignIn`.
+ */
 export function useAuthSignIn() {
   const { t } = useTranslation();
   const router = useRouter();

@@ -1,9 +1,94 @@
+/**
+ * @file Pressable button primitive supporting primary, secondary, ink, and card variants.
+ */
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text } from 'react-native';
-import { useSettingsStore } from '@/store/settings';
-import { getFontFamilies, typeScale } from '@/theme/typography';
+import { Pressable, Text } from 'react-native';
+
+import { typeScale } from '@/theme/typography';
+import { useStyles } from '@/theme/useStyles';
 import { useTheme } from '@/theme/useTheme';
 
+const createStyles = (theme, fonts) => ({
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: theme.radii.sm,
+  },
+  sizeMd: {
+    minHeight: 50,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+  },
+  sizeSm: {
+    minHeight: 40,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+  },
+  variantPrimary: {
+    backgroundColor: theme.colors.accent,
+    borderColor: theme.colors.accent,
+    borderWidth: 0,
+  },
+  variantSecondary: {
+    backgroundColor: theme.colors.surfaceAlt,
+    borderColor: theme.colors.ruleSubtle,
+    borderWidth: theme.borders.hairline,
+  },
+  variantInk: {
+    backgroundColor: theme.colors.inkSurface,
+    borderColor: theme.colors.ruleSubtle,
+    borderWidth: theme.borders.hairline,
+  },
+  variantCard: {
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.ruleSubtle,
+    borderWidth: theme.borders.hairline,
+  },
+  disabled: {
+    opacity: 0.45,
+  },
+  pressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.975 }],
+  },
+  labelBase: {
+    textAlign: 'center',
+    fontFamily: fonts.bodyBold,
+  },
+  labelMd: {
+    ...typeScale.body,
+    fontFamily: fonts.bodyBold,
+  },
+  labelSm: {
+    ...typeScale.caption,
+    fontFamily: fonts.bodyBold,
+  },
+  textPrimary: {
+    color: theme.colors.onAccent,
+  },
+  textInk: {
+    color: theme.colors.onInkSurface,
+  },
+  textDefault: {
+    color: theme.colors.ink,
+  },
+});
+
+/**
+ * Renders a themed editorial action button with optional leading Ionicon.
+ *
+ * @param {object} props - Component props.
+ * @param {string} props.label - Single-line button caption.
+ * @param {Function} props.onPress - Tap handler.
+ * @param {'primary' | 'secondary' | 'ink' | 'card'} [props.variant='primary'] - Surface style variant.
+ * @param {'md' | 'sm'} [props.size='md'] - Height and padding scale.
+ * @param {boolean} [props.disabled=false] - Disables taps and lowers opacity when true.
+ * @param {string} [props.icon] - Optional Ionicons glyph name.
+ * @param {string} [props.accessibilityHint] - Accessibility hint read by screen readers.
+ * @returns {JSX.Element} Pressable button element.
+ */
 export function NewspaperButton({
   label,
   onPress,
@@ -14,27 +99,31 @@ export function NewspaperButton({
   accessibilityHint,
 }) {
   const theme = useTheme();
-  const language = useSettingsStore((s) => s.language);
-  const fonts = getFontFamilies(language);
-
+  const styles = useStyles(createStyles);
   const isSmall = size === 'sm';
-  let backgroundColor = theme.colors.accent;
-  let textColor = theme.colors.onAccent;
-  let borderColor = theme.colors.accent;
 
-  if (variant === 'secondary') {
-    backgroundColor = theme.colors.surfaceAlt;
-    textColor = theme.colors.ink;
-    borderColor = theme.colors.ruleSubtle;
-  } else if (variant === 'ink') {
-    backgroundColor = theme.colors.inkSurface;
-    textColor = theme.colors.onInkSurface;
-    borderColor = theme.colors.ruleSubtle;
-  } else if (variant === 'card') {
-    backgroundColor = theme.colors.card;
-    textColor = theme.colors.ink;
-    borderColor = theme.colors.ruleSubtle;
-  }
+  const variantBox =
+    variant === 'secondary'
+      ? styles.variantSecondary
+      : variant === 'ink'
+        ? styles.variantInk
+        : variant === 'card'
+          ? styles.variantCard
+          : styles.variantPrimary;
+
+  const variantText =
+    variant === 'ink'
+      ? styles.textInk
+      : variant === 'primary'
+        ? styles.textPrimary
+        : styles.textDefault;
+
+  const iconColor =
+    variant === 'ink'
+      ? theme.colors.onInkSurface
+      : variant === 'primary'
+        ? theme.colors.onAccent
+        : theme.colors.ink;
 
   return (
     <Pressable
@@ -44,45 +133,19 @@ export function NewspaperButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
-        {
-          minHeight: isSmall ? 40 : 50,
-          borderRadius: theme.radii.sm,
-          backgroundColor,
-          borderColor,
-          borderWidth: variant === 'primary' ? 0 : theme.borders.hairline,
-          paddingHorizontal: isSmall ? theme.spacing.md : theme.spacing.lg,
-          paddingVertical: isSmall ? theme.spacing.xs : theme.spacing.sm,
-          opacity: disabled ? 0.45 : pressed ? 0.85 : 1,
-          transform: [{ scale: pressed && !disabled ? 0.975 : 1 }],
-        },
+        isSmall ? styles.sizeSm : styles.sizeMd,
+        variantBox,
+        disabled ? styles.disabled : null,
+        pressed && !disabled ? styles.pressed : null,
       ]}
     >
-      {icon ? <Ionicons name={icon} size={isSmall ? 15 : 18} color={textColor} /> : null}
+      {icon ? <Ionicons name={icon} size={isSmall ? 15 : 18} color={iconColor} /> : null}
       <Text
         numberOfLines={1}
-        style={[
-          isSmall ? typeScale.caption : typeScale.body,
-          styles.label,
-          {
-            color: textColor,
-            fontFamily: fonts.bodyBold,
-          },
-        ]}
+        style={[styles.labelBase, isSmall ? styles.labelSm : styles.labelMd, variantText]}
       >
         {label}
       </Text>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  label: {
-    textAlign: 'center',
-  },
-});

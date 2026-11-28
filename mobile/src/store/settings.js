@@ -1,4 +1,9 @@
+/**
+ * Zustand store managing UI language, theme preference, quiet hours, digest schedule, and read change IDs.
+ * Deliberately caps `readChangeIds` at the 100 most recent IDs to keep local persistence tiny.
+ */
 import { create } from 'zustand';
+
 import i18n from '@/i18n';
 import { readJsonCache, writeJsonCache } from '@/lib/fileCache';
 
@@ -15,6 +20,7 @@ function persistSettings(s) {
   });
 }
 
+// Persisted app settings store synced with i18next on language changes.
 export const useSettingsStore = create((set, get) => ({
   language: i18n.language || 'en',
   languageChosen: false,

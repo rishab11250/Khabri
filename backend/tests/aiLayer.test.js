@@ -1,5 +1,6 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { analyzeChangeWithRouter } from '../src/ai/analyzeChange.js';
 import { wrapUntrustedData } from '../src/ai/prompts.js';
 import { consumeQuota, consumeUserDailyQuota } from '../src/ai/quota.js';
@@ -62,7 +63,7 @@ describe('AI router, one-call analysis, cache, quotas, trust, and deadlines', ()
   });
 
   it('cools down 429 keys, fails over Gemini A -> Gemini B -> Grok, and opens circuit on 3 failures', async () => {
-    let clock = 1_700_000_000_000;
+    const clock = 1_700_000_000_000;
     const rateErr = Object.assign(new Error('429 RESOURCE_EXHAUSTED'), {
       status: 429,
       isRateLimit: true,

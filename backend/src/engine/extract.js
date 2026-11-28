@@ -1,3 +1,7 @@
+/**
+ * Deterministically extracts dates, numeric quantities/fees, and eligibility clauses from notice text.
+ * Deliberately assumes Indian `DD/MM/YYYY` precedence for slash/dash numeric dates.
+ */
 const MONTHS = {
   jan: 1,
   january: 1,
@@ -53,7 +57,13 @@ function inferDateLabel(context) {
   return 'Important date';
 }
 
-export function extractDates(text) {
+/**
+ * Extracts unique `YYYY-MM-DD` dates with contextual labels and rule confidence scores.
+ *
+ * @param {string} text - Normalized notice or page text.
+ * @returns {Array<{ raw: string, iso: string, label: string, confidence: number }>} Extracted dates.
+ */
+function extractDates(text) {
   const source = String(text || '');
   const found = [];
   const seen = new Set();
@@ -105,7 +115,13 @@ export function extractDates(text) {
   return found;
 }
 
-export function extractNumbers(text) {
+/**
+ * Extracts fees, vacancy counts, percentages, and age limits used by materiality change detection.
+ *
+ * @param {string} text - Normalized notice or page text.
+ * @returns {string[]} Deduplicated numeric tokens.
+ */
+function extractNumbers(text) {
   const source = String(text || '');
   const numbers = new Set();
 
@@ -128,7 +144,13 @@ export function extractNumbers(text) {
 const ELIGIBILITY_KEYWORDS =
   /\b(eligib(?:le|ility)|qualif(?:ication|ied)|degree|graduate|post-?graduate|diploma|percentage|marks|age\s*limit|relaxation|income\s*(?:limit|ceiling)|domicile|category|sc\/st|obc|ews|pwd|citizen\s+of\s+india)\b/i;
 
-export function extractEligibility(text) {
+/**
+ * Extracts sentences mentioning eligibility rules, reservations, age relaxations, or degrees.
+ *
+ * @param {string} text - Normalized notice or page text.
+ * @returns {string[]} Matching eligibility sentences (12+ characters).
+ */
+function extractEligibility(text) {
   const sentences = String(text || '')
     .split(/(?<=[.!?])\s+|\n+/)
     .map((s) => s.trim())
@@ -137,6 +159,12 @@ export function extractEligibility(text) {
   return sentences.filter((s) => ELIGIBILITY_KEYWORDS.test(s));
 }
 
+/**
+ * Extracts all deterministic signal families (`dates`, `numbers`, `eligibility`) in one pass.
+ *
+ * @param {string} text - Normalized notice or page text.
+ * @returns {{ dates: Array<object>, numbers: string[], eligibility: string[] }} Extracted signals.
+ */
 export function extractSignals(text) {
   return {
     dates: extractDates(text),

@@ -1,3 +1,8 @@
+/**
+ * Orchestrates scheduled monitoring ticks: distributed lock acquisition, due-source priority,
+ * fetch -> diff -> PDF supplement -> materiality filter -> AI analysis -> persistence -> push dispatch.
+ * Deliberately opens a 6h circuit breaker after 5 consecutive failures so broken portals do not stall ticks.
+ */
 import { analyzeChangeWithRouter } from '../ai/analyzeChange.js';
 import { resolveTrustTag } from '../ai/trust.js';
 import { Change, Deadline, JobLock, Snapshot, Source } from '../models/index.js';
@@ -11,11 +16,21 @@ import { fetchRss } from './fetchers/rss.js';
 import { evaluateMateriality } from './materialFilter.js';
 import { fetchAndExtractPdf } from './pdfExtract.js';
 
-const CIRCUIT_OPEN_MS = 6 * 60 * 60 * 1000;
-const FAILURE_THRESHOLD = 5;
-const SNAPSHOT_RETENTION = 10;
-const DEFAULT_LOCK_TTL_MS = 10 * 60 * 1000;
+const CIRCUIT_OPEN_MS = 6 * 60 * 60 * 1000; // Pause broken sources for 6 hours before retrying.
+const FAILURE_THRESHOLD = 5; // Consecutive fetch errors required to open a source's circuit breaker.
+const SNAPSHOT_RETENTION = 10; // Retain last 10 snapshots per source for auditability without unbounded growth.
+const DEFAULT_LOCK_TTL_MS = 10 * 60 * 1000; // Lease TTL ensures crashed workers release `/internal/tick`.
 
+// --- Distributed job locks ---
+
+/**
+ * Acquires an exclusive time-bounded lock in MongoDB so overlapping `/internal/tick` cron runs skip cleanly.
+ *
+ * @param {string} [name] - Logical lock identifier (`tick`).
+ * @param {number} [ttlMs] - Lease duration in ms before another worker may steal a stale lock.
+ * @param {Date} [now] - Reference timestamp for expiry checks.
+ * @returns {Promise<boolean>} True if this caller owns the lock.
+ */
 export async function acquireJobLock(name = 'tick', ttlMs = DEFAULT_LOCK_TTL_MS, now = new Date()) {
   const lockedUntil = new Date(now.getTime() + ttlMs);
   try {
@@ -30,16 +45,34 @@ export async function acquireJobLock(name = 'tick', ttlMs = DEFAULT_LOCK_TTL_MS,
     return Boolean(lock);
   } catch (err) {
     if (err?.code === 11000) {
+      // Concurrent upsert race won by another tick instance.
       return false;
     }
     throw err;
   }
 }
 
+/**
+ * Releases the distributed tick lock immediately when a tick finishes.
+ *
+ * @param {string} [name] - Logical lock identifier.
+ * @returns {Promise<void>}
+ */
 export async function releaseJobLock(name = 'tick') {
   await JobLock.updateOne({ name }, { $set: { lockedUntil: new Date(0) } });
 }
 
+// --- Due-source selection and snapshot housekeeping ---
+
+/**
+ * Selects up to `limit` supported, followed, non-circuit-open sources due by `now`.
+ * Prioritizes sources with nearest active deadlines first, then follower count, then staleness.
+ *
+ * @param {object} [params] - Selection window and cap.
+ * @param {Date} [params.now] - Current reference timestamp.
+ * @param {number} [params.limit] - Maximum sources to return per tick batch.
+ * @returns {Promise<Array<object>>} Ordered source documents ready for fetching.
+ */
 export async function selectDueSources({ now = new Date(), limit = 25 } = {}) {
   const candidates = await Source.find({
     followerCount: { $gt: 0 },
@@ -85,6 +118,13 @@ export async function selectDueSources({ now = new Date(), limit = 25 } = {}) {
   return candidates.slice(0, limit);
 }
 
+/**
+ * Deletes older snapshots for `sourceId`, retaining only the newest `keep` records (`10` by default).
+ *
+ * @param {string|object} sourceId - Mongo source ID.
+ * @param {number} [keep] - Number of recent snapshots to preserve.
+ * @returns {Promise<void>}
+ */
 export async function pruneSnapshots(sourceId, keep = SNAPSHOT_RETENTION) {
   const stale = await Snapshot.find({ sourceId })
     .sort({ takenAt: -1 })
@@ -105,155 +145,188 @@ function computeNextDueAt(intervalMin, now, jitterMs) {
   return new Date(now.getTime() + baseMs + delta);
 }
 
-async function fetchBySourceType(source, fetchOptions) {
+function fetchBySourceType(source, fetchOptions) {
   if (source.type === 'listing') return fetchListing(source, fetchOptions);
   if (source.type === 'rss') return fetchRss(source, fetchOptions);
   return fetchPage(source, fetchOptions);
 }
 
-export async function processSource(source, options = {}) {
-  const now = options.now ?? new Date();
-  const fetchFn = options.fetchSource ?? fetchBySourceType;
-  const pdfExtractFn = options.extractPdf ?? fetchAndExtractPdf;
-
-  try {
-    const fetched = await fetchFn(source, options.fetchOptions || {});
-    const nextDueAt = computeNextDueAt(source.intervalMin, now, options.jitterMs);
-
-    if (fetched.notModified) {
-      await Source.updateOne(
-        { _id: source._id },
-        {
-          $set: {
-            lastFetchedAt: now,
-            nextDueAt,
-            failures: 0,
-            circuitOpenUntil: null,
-            ...(fetched.etag ? { etag: fetched.etag } : {}),
-            ...(fetched.lastModified ? { lastModified: fetched.lastModified } : {}),
-          },
-        },
-      );
-      return { sourceId: String(source._id), status: 'not_modified', changeCreated: false };
-    }
-
-    if (fetched.unsupported) {
-      await Source.updateOne(
-        { _id: source._id },
-        { $set: { unsupported: true, lastFetchedAt: now, failures: 0, circuitOpenUntil: null } },
-      );
-      return { sourceId: String(source._id), status: 'unsupported', changeCreated: false };
-    }
-
-    const prevSnapshot = await Snapshot.findOne({ sourceId: source._id })
-      .sort({ takenAt: -1 })
-      .lean();
-
-    if (!prevSnapshot) {
-      await Snapshot.create({
-        sourceId: source._id,
-        takenAt: now,
-        contentHash: fetched.contentHash,
-        items: fetched.items || [],
-        textExcerpt: fetched.textExcerpt || '',
-      });
-      await pruneSnapshots(source._id);
-      await Source.updateOne(
-        { _id: source._id },
-        {
-          $set: {
-            lastFetchedAt: now,
-            lastHash: fetched.contentHash,
-            nextDueAt,
-            failures: 0,
-            circuitOpenUntil: null,
-            ...(fetched.etag ? { etag: fetched.etag } : {}),
-            ...(fetched.lastModified ? { lastModified: fetched.lastModified } : {}),
-          },
-        },
-      );
-      return { sourceId: String(source._id), status: 'baseline_saved', changeCreated: false };
-    }
-
-    const isListingLike = source.type === 'listing' || source.type === 'rss';
-    const diffResult = isListingLike
-      ? diffListings(prevSnapshot.items || [], fetched.items || [])
-      : diffPages(prevSnapshot, fetched);
-
-    if (!diffResult.changed) {
-      await Source.updateOne(
-        { _id: source._id },
-        {
-          $set: {
-            lastFetchedAt: now,
-            nextDueAt,
-            failures: 0,
-            circuitOpenUntil: null,
-            ...(fetched.etag ? { etag: fetched.etag } : {}),
-            ...(fetched.lastModified ? { lastModified: fetched.lastModified } : {}),
-          },
-        },
-      );
-      return { sourceId: String(source._id), status: 'unchanged', changeCreated: false };
-    }
-
-    let pdfSupplement = '';
-    if (isListingLike && !options.skipPdf) {
-      const candidateLinks = [
-        ...diffResult.added.map((i) => i.href),
-        ...diffResult.updated.map((u) => u.after.href),
-      ].filter((href) => /\.pdf(?:$|\?)/i.test(href));
-
-      if (candidateLinks[0]) {
-        try {
-          const pdfRes = await pdfExtractFn(candidateLinks[0], options.fetchOptions || {});
-          pdfSupplement = pdfRes.text.slice(0, 4000);
-        } catch {
-          // Non-fatal: proceed with listing text if linked PDF fails
-        }
-      }
-    }
-
-    const beforeText = isListingLike
-      ? prevSnapshot.textExcerpt || ''
-      : prevSnapshot.textExcerpt || '';
-    const afterText = isListingLike
-      ? `${fetched.textExcerpt || ''}\n${pdfSupplement}`.trim()
-      : fetched.text || fetched.textExcerpt || '';
-
-    const beforeSignals = extractSignals(beforeText);
-    const afterSignals = extractSignals(afterText);
-    const material = evaluateMateriality({ diffResult, beforeSignals, afterSignals });
-
-    await Snapshot.create({
-      sourceId: source._id,
-      takenAt: now,
-      contentHash: fetched.contentHash,
-      items: fetched.items || [],
-      textExcerpt: fetched.textExcerpt || '',
-    });
-    await pruneSnapshots(source._id);
-
-    await Source.updateOne(
-      { _id: source._id },
-      {
-        $set: {
-          lastFetchedAt: now,
-          lastHash: fetched.contentHash,
-          nextDueAt,
-          failures: 0,
-          circuitOpenUntil: null,
-          ...(fetched.etag ? { etag: fetched.etag } : {}),
-          ...(fetched.lastModified ? { lastModified: fetched.lastModified } : {}),
-        },
+async function markSourceSuccess(sourceId, now, nextDueAt, fetched, includeHash = false) {
+  await Source.updateOne(
+    { _id: sourceId },
+    {
+      $set: {
+        lastFetchedAt: now,
+        nextDueAt,
+        failures: 0,
+        circuitOpenUntil: null,
+        ...(includeHash ? { lastHash: fetched.contentHash } : {}),
+        ...(fetched.etag ? { etag: fetched.etag } : {}),
+        ...(fetched.lastModified ? { lastModified: fetched.lastModified } : {}),
       },
-    );
+    },
+  );
+}
 
-    if (!material.material) {
-      return { sourceId: String(source._id), status: 'filtered_noise', changeCreated: false };
+async function saveSnapshotAndPrune(sourceId, now, fetched) {
+  await Snapshot.create({
+    sourceId,
+    takenAt: now,
+    contentHash: fetched.contentHash,
+    items: fetched.items || [],
+    textExcerpt: fetched.textExcerpt || '',
+  });
+  await pruneSnapshots(sourceId);
+}
+
+async function loadPdfSupplement({ isListingLike, diffResult, options, pdfExtractFn }) {
+  if (!isListingLike || options.skipPdf) return '';
+  const candidateLinks = [
+    ...diffResult.added.map((i) => i.href),
+    ...diffResult.updated.map((u) => u.after.href),
+  ].filter((href) => /\.pdf(?:$|\?)/i.test(href));
+
+  if (!candidateLinks[0]) return '';
+  try {
+    const pdfRes = await pdfExtractFn(candidateLinks[0], options.fetchOptions || {});
+    return pdfRes.text.slice(0, 4000);
+  } catch {
+    return '';
+  }
+}
+
+function buildEvidence(source, isListingLike, diffResult) {
+  const evidence = [{ url: source.url, label: source.name }];
+  const linked = isListingLike
+    ? diffResult.added[0]?.href || diffResult.updated[0]?.after?.href
+    : '';
+  if (linked && linked !== source.url) {
+    evidence.push({ url: linked, label: 'Notice link' });
+  }
+  return evidence;
+}
+
+async function persistAndNotifyChange({
+  source,
+  now,
+  isListingLike,
+  diffResult,
+  material,
+  analysisData,
+  options,
+}) {
+  const changeDoc = await Change.create({
+    sourceId: source._id,
+    detectedAt: now,
+    kind: analysisData.kind || material.kind,
+    impact: analysisData.impact || material.impact,
+    before: analysisData.before,
+    after: analysisData.after,
+    evidence: buildEvidence(source, isListingLike, diffResult),
+    trust: resolveTrustTag({ source }),
+    analysis: {
+      why: analysisData.whyItMatters ?? analysisData.why ?? '',
+      checklist: analysisData.checklist || [],
+      dates: analysisData.dates || [],
+    },
+    confidence: analysisData.confidence ?? 0.6,
+  });
+
+  await persistFollowersDataForChange({ change: changeDoc, source });
+
+  if (!options.skipPush) {
+    try {
+      await dispatchChangeNotifications({
+        change: changeDoc,
+        source,
+        now,
+        expoClient: options.expoClient,
+      });
+    } catch {
+      // Non-fatal: push failure should not roll back persisted change
     }
+  }
 
-    const analysisContext = {
+  if (options.onChangePersisted) {
+    await options.onChangePersisted({ change: changeDoc, source });
+  }
+
+  return changeDoc;
+}
+
+async function recordSourceFailure(source, now, err) {
+  const failures = (source.failures ?? 0) + 1;
+  const circuitOpen = failures >= FAILURE_THRESHOLD;
+  await Source.updateOne(
+    { _id: source._id },
+    {
+      $set: {
+        failures,
+        lastFetchedAt: now,
+        circuitOpenUntil: circuitOpen ? new Date(now.getTime() + CIRCUIT_OPEN_MS) : null,
+      },
+    },
+  );
+
+  return {
+    sourceId: String(source._id),
+    status: circuitOpen ? 'circuit_opened' : 'failed',
+    changeCreated: false,
+    error: err?.message || 'Fetch error',
+  };
+}
+
+function analyzeFetchedSource(analysisContext, options) {
+  if (options.analyzeChange) {
+    return options.analyzeChange(analysisContext);
+  }
+  return analyzeChangeWithRouter(analysisContext, {
+    router: options.aiRouter,
+    skipCache: options.skipAiCache,
+  });
+}
+
+async function processDetectedDiff(
+  source,
+  fetched,
+  prevSnapshot,
+  { now, nextDueAt, options, pdfExtractFn },
+) {
+  const sourceId = String(source._id);
+  const isListingLike = source.type === 'listing' || source.type === 'rss';
+  const diffResult = isListingLike
+    ? diffListings(prevSnapshot.items || [], fetched.items || [])
+    : diffPages(prevSnapshot, fetched);
+
+  if (!diffResult.changed) {
+    await markSourceSuccess(source._id, now, nextDueAt, fetched);
+    return { sourceId, status: 'unchanged', changeCreated: false };
+  }
+
+  const pdfSupplement = await loadPdfSupplement({
+    isListingLike,
+    diffResult,
+    options,
+    pdfExtractFn,
+  });
+  const beforeText = prevSnapshot.textExcerpt || '';
+  const afterText = isListingLike
+    ? `${fetched.textExcerpt || ''}\n${pdfSupplement}`.trim()
+    : fetched.text || fetched.textExcerpt || '';
+
+  const beforeSignals = extractSignals(beforeText);
+  const afterSignals = extractSignals(afterText);
+  const material = evaluateMateriality({ diffResult, beforeSignals, afterSignals });
+
+  await saveSnapshotAndPrune(source._id, now, fetched);
+  await markSourceSuccess(source._id, now, nextDueAt, fetched, true);
+
+  if (!material.material) {
+    return { sourceId, status: 'filtered_noise', changeCreated: false };
+  }
+
+  const analysisData = await analyzeFetchedSource(
+    {
       source,
       diffResult,
       material,
@@ -262,88 +335,91 @@ export async function processSource(source, options = {}) {
       beforeText,
       afterText,
       pdfSupplement,
-    };
+    },
+    options,
+  );
+  const changeDoc = await persistAndNotifyChange({
+    source,
+    now,
+    isListingLike,
+    diffResult,
+    material,
+    analysisData,
+    options,
+  });
 
-    const analysisData = options.analyzeChange
-      ? await options.analyzeChange(analysisContext)
-      : await analyzeChangeWithRouter(analysisContext, {
-          router: options.aiRouter,
-          skipCache: options.skipAiCache,
-        });
+  return {
+    sourceId,
+    status: 'changed',
+    changeCreated: true,
+    changeId: String(changeDoc._id),
+  };
+}
 
-    const evidence = [{ url: source.url, label: source.name }];
-    const linked = isListingLike
-      ? diffResult.added[0]?.href || diffResult.updated[0]?.after?.href
-      : '';
-    if (linked && linked !== source.url) {
-      evidence.push({ url: linked, label: 'Notice link' });
-    }
+async function handleFetchedSource(source, fetched, { now, options, pdfExtractFn }) {
+  const sourceId = String(source._id);
+  const nextDueAt = computeNextDueAt(source.intervalMin, now, options.jitterMs);
 
-    const changeDoc = await Change.create({
-      sourceId: source._id,
-      detectedAt: now,
-      kind: analysisData.kind || material.kind,
-      impact: analysisData.impact || material.impact,
-      before: analysisData.before,
-      after: analysisData.after,
-      evidence,
-      trust: resolveTrustTag({ source }),
-      analysis: {
-        why: analysisData.whyItMatters ?? analysisData.why ?? '',
-        checklist: analysisData.checklist || [],
-        dates: analysisData.dates || [],
-      },
-      confidence: analysisData.confidence ?? 0.6,
-    });
+  if (fetched.notModified) {
+    await markSourceSuccess(source._id, now, nextDueAt, fetched);
+    return { sourceId, status: 'not_modified', changeCreated: false };
+  }
 
-    await persistFollowersDataForChange({ change: changeDoc, source });
-
-    if (!options.skipPush) {
-      try {
-        await dispatchChangeNotifications({
-          change: changeDoc,
-          source,
-          now,
-          expoClient: options.expoClient,
-        });
-      } catch {
-        // Non-fatal: push failure should not roll back persisted change
-      }
-    }
-
-    if (options.onChangePersisted) {
-      await options.onChangePersisted({ change: changeDoc, source });
-    }
-
-    return {
-      sourceId: String(source._id),
-      status: 'changed',
-      changeCreated: true,
-      changeId: String(changeDoc._id),
-    };
-  } catch (err) {
-    const failures = (source.failures ?? 0) + 1;
-    const circuitOpen = failures >= FAILURE_THRESHOLD;
+  if (fetched.unsupported) {
     await Source.updateOne(
       { _id: source._id },
-      {
-        $set: {
-          failures,
-          lastFetchedAt: now,
-          circuitOpenUntil: circuitOpen ? new Date(now.getTime() + CIRCUIT_OPEN_MS) : null,
-        },
-      },
+      { $set: { unsupported: true, lastFetchedAt: now, failures: 0, circuitOpenUntil: null } },
     );
+    return { sourceId, status: 'unsupported', changeCreated: false };
+  }
 
-    return {
-      sourceId: String(source._id),
-      status: circuitOpen ? 'circuit_opened' : 'failed',
-      changeCreated: false,
-      error: err?.message || 'Fetch error',
-    };
+  const prevSnapshot = await Snapshot.findOne({ sourceId: source._id })
+    .sort({ takenAt: -1 })
+    .lean();
+
+  if (!prevSnapshot) {
+    await saveSnapshotAndPrune(source._id, now, fetched);
+    await markSourceSuccess(source._id, now, nextDueAt, fetched, true);
+    return { sourceId, status: 'baseline_saved', changeCreated: false };
+  }
+
+  return processDetectedDiff(source, fetched, prevSnapshot, {
+    now,
+    nextDueAt,
+    options,
+    pdfExtractFn,
+  });
+}
+
+// --- Single-source monitoring pipeline and tick runner ---
+
+/**
+ * Runs the full fetch -> diff -> materiality -> AI -> change/push pipeline for one source.
+ * Updates source health, next due timestamp with jitter, and circuit-breaker counters.
+ *
+ * @param {object} source - Due `Source` document.
+ * @param {object} [options] - Dependency injections and flags for deterministic testing.
+ * @returns {Promise<{ sourceId: string, status: string, changeCreated: boolean, changeId?: string, error?: string }>} Execution status.
+ */
+export async function processSource(source, options = {}) {
+  const now = options.now ?? new Date();
+  const fetchFn = options.fetchSource ?? fetchBySourceType;
+  const pdfExtractFn = options.extractPdf ?? fetchAndExtractPdf;
+
+  try {
+    const fetched = await fetchFn(source, options.fetchOptions || {});
+    return await handleFetchedSource(source, fetched, { now, options, pdfExtractFn });
+  } catch (err) {
+    return recordSourceFailure(source, now, err);
   }
 }
 
+/**
+ * Executes one locked scheduler tick across due sources and checks Expo push receipts.
+ *
+ * @param {object} [options] - Batch limit, clock override, lock TTL, and test hooks.
+ * @returns {Promise<{ status: string, processed: number, changesCreated: number, results: Array<object> }>} Tick report.
+ */
 export async function runTick(options = {}) {
   const now = options.now ?? new Date();
   const acquired = await acquireJobLock('tick', options.lockTtlMs ?? DEFAULT_LOCK_TTL_MS, now);

@@ -1,7 +1,17 @@
+/**
+ * Verifies Supabase bearer JWTs and auto-provisions the corresponding MongoDB `User` record.
+ * Deliberately rejects missing subjects and delegates cryptographic checks to `verifySupabaseJwt`.
+ */
 import { verifySupabaseJwt } from '../config/supabase.js';
 import { User } from '../models/User.js';
 import { AppError } from './envelope.js';
 
+/**
+ * Builds an Express authentication middleware using `options.verifyJwt` (overridable in tests).
+ *
+ * @param {object} [options] - Optional dependencies (`verifyJwt`).
+ * @returns {Function} Express middleware populating `req.auth` and `req.user`.
+ */
 export function createAuthMiddleware(options = {}) {
   const verifyJwt = options.verifyJwt ?? verifySupabaseJwt;
 

@@ -1,9 +1,21 @@
+/**
+ * Fetches and parses RSS/Atom syndication feeds into normalized listing items.
+ * Deliberately reuses `normaliseListingItems` so RSS feeds share listing diff semantics cleanly.
+ */
 import Parser from 'rss-parser';
+
 import { normaliseListingItems } from '../normalise.js';
 import { fetchWithGuards } from './fetchWithGuards.js';
 
 const rssParser = new Parser();
 
+/**
+ * Parses raw RSS/Atom XML into normalized listing items and feed title.
+ *
+ * @param {string} xml - Raw XML feed body.
+ * @param {string} baseUrl - Base URL used to resolve relative item links.
+ * @returns {Promise<{ feedTitle: string, items: Array<object>, contentHash: string, textExcerpt: string }>} Parsed feed payload.
+ */
 export async function parseRssXml(xml, baseUrl) {
   const feed = await rssParser.parseString(xml || '');
   const rawItems = (feed.items || []).map((item) => ({
@@ -18,6 +30,14 @@ export async function parseRssXml(xml, baseUrl) {
   };
 }
 
+/**
+ * Fetches an RSS/Atom source via guards and returns its normalized items.
+ *
+ * @param {object} source - Monitored `Source` document.
+ * @param {object} [options] - Fetch/guard options forwarded to `fetchWithGuards`.
+ * @returns {Promise<object>} `notModified` metadata or parsed RSS items with headers.
+ * @throws {Error} With `status` property when upstream returns non-2xx HTTP status.
+ */
 export async function fetchRss(source, options = {}) {
   const res = await fetchWithGuards(source, options);
   if (res.notModified) {

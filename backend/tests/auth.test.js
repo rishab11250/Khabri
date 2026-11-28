@@ -2,6 +2,7 @@ import { SignJWT } from 'jose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+
 import { createApp } from '../src/app.js';
 import { connectDb, disconnectDb } from '../src/config/db.js';
 import { verifySupabaseJwt } from '../src/config/supabase.js';
@@ -151,9 +152,18 @@ describe('Auth, /v1/me, and /internal/tick', () => {
     expect(await Device.countDocuments({ userId })).toBe(0);
   });
 
-  it('protects POST /internal/tick with x-tick-secret', async () => {
-    const badRes = await request(app).post('/internal/tick').set('x-tick-secret', 'wrong');
+  it('protects POST /internal/tick and /internal/digest with x-tick-secret', async () => {
+    const missingRes = await request(app).post('/internal/tick');
+    expect(missingRes.status).toBe(401);
+
+    const sameLenWrong = 'x'.repeat(TEST_ENV.INTERNAL_TICK_SECRET.length);
+    const badRes = await request(app).post('/internal/tick').set('x-tick-secret', sameLenWrong);
     expect(badRes.status).toBe(401);
+
+    const badDigestRes = await request(app)
+      .post('/internal/digest')
+      .set('x-tick-secret', 'wrong-digest-secret');
+    expect(badDigestRes.status).toBe(401);
 
     const okRes = await request(app)
       .post('/internal/tick')

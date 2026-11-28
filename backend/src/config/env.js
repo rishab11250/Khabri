@@ -1,4 +1,10 @@
+/**
+ * Loads `.env` and validates required/optional backend environment variables via Zod.
+ * Deliberately caches validated configuration on first read and converts empty strings to `undefined`
+ * so Render/CI blank env fields fall back cleanly instead of failing URL checks.
+ */
 import 'dotenv/config';
+
 import { z } from 'zod';
 
 const optionalNonEmpty = z.preprocess(
@@ -17,7 +23,8 @@ const optionalInt = (fallback) =>
     z.number().int().nonnegative(),
   );
 
-export const envSchema = z.object({
+// Validates runtime process.env shape before server startup or internal job auth.
+const envSchema = z.object({
   PORT: z.preprocess(
     (v) => (v === undefined || String(v).trim() === '' ? 4000 : Number(v)),
     z.number().int().positive().max(65535),
@@ -43,6 +50,13 @@ export const envSchema = z.object({
   CORS_ORIGIN: optionalNonEmpty,
 });
 
+/**
+ * Validates `rawEnv` against `envSchema` and throws a descriptive summary if invalid.
+ *
+ * @param {object} [rawEnv] - Raw key-value environment map (defaults to `process.env`).
+ * @returns {object} Normalized and typed environment object.
+ * @throws {Error} When required environment variables are missing or malformed.
+ */
 export function parseEnv(rawEnv = process.env) {
   const result = envSchema.safeParse(rawEnv);
   if (!result.success) {
@@ -56,13 +70,14 @@ export function parseEnv(rawEnv = process.env) {
 
 let cachedEnv = null;
 
+/**
+ * Returns the memoized validated environment configuration, parsing `process.env` on first call.
+ *
+ * @returns {object} Validated environment object.
+ */
 export function getEnv() {
   if (!cachedEnv) {
     cachedEnv = parseEnv(process.env);
   }
   return cachedEnv;
-}
-
-export function resetEnvCache() {
-  cachedEnv = null;
 }

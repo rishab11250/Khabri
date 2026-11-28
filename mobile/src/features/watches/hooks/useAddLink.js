@@ -1,3 +1,6 @@
+/**
+ * Manages pasted URL validation, `/v1/intake/link` probing, and watch creation on direct/SPA results.
+ */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
@@ -5,8 +8,15 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
+
 import { api } from '@/lib/api';
 
+/**
+ * Form and mutation hook powering the Add by Link screen (`add/link`).
+ *
+ * @param {string|string[]} paramUrl - Optional pre-populated URL from clipboard or Android share intent.
+ * @returns {object} Form controls, probed link preview result, and confirmation mutation.
+ */
 export function useAddLink(paramUrl) {
   const { t } = useTranslation();
   const router = useRouter();

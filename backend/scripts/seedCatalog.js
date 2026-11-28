@@ -1,4 +1,5 @@
 import 'dotenv/config';
+
 import { connectDb, disconnectDb } from '../src/config/db.js';
 import { getEnv } from '../src/config/env.js';
 import { logger } from '../src/config/logger.js';

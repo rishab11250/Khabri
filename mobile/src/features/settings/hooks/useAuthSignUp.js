@@ -1,3 +1,6 @@
+/**
+ * Manages sign-up form validation, password-strength scoring, Supabase account creation, and verification hints.
+ */
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
@@ -5,6 +8,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
+
 import { api } from '@/lib/api';
 import { isApiConfigured } from '@/lib/env';
 import { supabase } from '@/lib/supabase';
@@ -25,6 +29,11 @@ function computePasswordStrength(pwd, theme, t) {
   return { score: 4, label: t('auth.strengthStrong'), color: theme.colors.neem };
 }
 
+/**
+ * Form state, password strength meter, and submission hook powering the Sign-Up screen.
+ *
+ * @returns {object} Form controls, password strength descriptor, notices, and `submitSignUp`.
+ */
 export function useAuthSignUp() {
   const { t } = useTranslation();
   const router = useRouter();

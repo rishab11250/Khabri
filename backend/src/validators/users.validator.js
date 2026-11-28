@@ -1,7 +1,11 @@
+/**
+ * Validates strict profile, language, onboarding, digest time, and quiet-hours updates.
+ */
 import { z } from 'zod';
 
 const timeHHMM = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Expected HH:MM 24h format');
 
+// Strict body schema for PATCH /v1/me.
 export const updateMeSchema = z
   .object({
     name: z.string().trim().max(80).optional(),
